@@ -15,14 +15,21 @@ drake_cc_binary(
     data = [":models"],
     deps = [
         "//common:find_resource",
-        "//common:text_logging_gflags",
+        "//common:essential",
+        "//geometry:scene_graph",
         "//geometry:geometry_visualization",
+        "//geometry/dev:scene_graph",
+        "//geometry/dev/render:render_engine_vtk",
         "//lcm",
         "//multibody/benchmarks/inclined_plane",
         "//multibody/parsing",
         "//multibody/plant",
         "//systems/analysis",
+        "//systems/rendering:pose_bundle_to_draw_message",
+        "//systems/sensors/dev:rgbd_camera",
+        "//systems/sensors:image_to_lcm_image_array_t",
         "@gflags",
+        "@lcmtypes_robotlocomotion",
     ],
 )
 
