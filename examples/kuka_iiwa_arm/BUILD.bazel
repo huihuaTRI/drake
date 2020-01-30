@@ -124,6 +124,7 @@ drake_cc_binary(
         "//systems/primitives:constant_vector_source",
         "//systems/primitives:demultiplexer",
         "//systems/primitives:discrete_derivative",
+        "//systems/primitives:first_order_low_pass_filter",
     ],
 )
 

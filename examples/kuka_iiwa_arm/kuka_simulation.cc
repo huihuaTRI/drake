@@ -30,11 +30,12 @@
 #include "drake/systems/lcm/lcm_subscriber_system.h"
 #include "drake/systems/primitives/demultiplexer.h"
 #include "drake/systems/primitives/discrete_derivative.h"
+#include "drake/systems/primitives/first_order_low_pass_filter.h"
 
 DEFINE_double(simulation_sec, std::numeric_limits<double>::infinity(),
               "Number of seconds to simulate.");
 DEFINE_string(urdf, "", "Name of urdf to load");
-DEFINE_double(target_realtime_rate, 1.0,
+DEFINE_double(target_realtime_rate, 20.0,
               "Playback speed.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
 DEFINE_bool(torque_control, false, "Simulate using torque control mode.");
@@ -135,8 +136,8 @@ int DoMain() {
                   controller->get_input_port_desired_state());
   builder.Connect(plant.get_state_output_port(iiwa_instance),
                   plant_state_demux->get_input_port(0));
-  builder.Connect(plant_state_demux->get_output_port(0),
-                  status_sender->get_position_measured_input_port());
+//   builder.Connect(plant_state_demux->get_output_port(0),
+//                   status_sender->get_position_measured_input_port());
   builder.Connect(plant_state_demux->get_output_port(0),
                   status_sender->get_velocity_estimated_input_port());
   builder.Connect(command_receiver->get_commanded_position_output_port(),
@@ -156,6 +157,17 @@ int DoMain() {
       status_sender->get_torque_external_input_port());
   builder.Connect(status_sender->get_output_port(),
                   status_pub->get_input_port());
+
+  const double kTimeConstant = 0.2;
+  auto low_pass_filter =
+      builder.AddSystem<drake::systems::FirstOrderLowPassFilter<double>>(
+          kTimeConstant, num_joints);
+
+  builder.Connect(plant_state_demux->get_output_port(0),
+                        low_pass_filter->get_input_port());
+  builder.Connect(low_pass_filter->get_output_port(),
+                        status_sender->get_position_measured_input_port());
+
   // Connect the torque input in torque control
   if (FLAGS_torque_control) {
     KukaTorqueController<double>* torque_controller =
