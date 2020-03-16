@@ -639,6 +639,7 @@ class MultibodyTree {
 
   /// See MultibodyPlant method.
   const Joint<T>& get_joint(JointIndex joint_index) const {
+    std::cout << "joint index: " << joint_index << std::endl;
     DRAKE_THROW_UNLESS(joint_index < num_joints());
     return *owned_joints_[joint_index];
   }

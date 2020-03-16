@@ -156,6 +156,7 @@ drake_cc_library(
         "//common:nice_type_name",
         "//common:symbolic",
         "//math:geometric_transform",
+        "//systems/analysis:simulator",
         "//systems/framework:leaf_system",
     ],
 )
@@ -439,6 +440,9 @@ drake_cc_googletest(
     name = "door_hinge_test",
     deps = [
         ":tree",
+        "//geometry:scene_graph",
+        "//multibody/benchmarks/inclined_plane",
+        "//multibody/plant",
     ],
 )
 
