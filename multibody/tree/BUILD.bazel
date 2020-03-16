@@ -440,9 +440,13 @@ drake_cc_googletest(
     name = "door_hinge_test",
     deps = [
         ":tree",
+        "//geometry:geometry_visualization",
         "//geometry:scene_graph",
         "//multibody/benchmarks/inclined_plane",
+        "//multibody/plant:contact_results_to_lcm",
         "//multibody/plant",
+        "//systems/analysis:simulator",
+        "//systems/framework:diagram",
     ],
 )
 
