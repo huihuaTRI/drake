@@ -1,0 +1,46 @@
+# Blender MTL File: 'exterior_door_24_originplacement.blend'
+# Material Count: 4
+
+newmtl exterior_door_black
+Ns 370.562482
+Ka 1.000000 1.000000 1.000000
+Kd 0.033103 0.033103 0.033103
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd exterior_door_color.png
+
+newmtl exterior_door_metal
+Ns 400.000024
+Ka 1.000000 1.000000 1.000000
+Kd 0.581463 0.581463 0.581463
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd exterior_door_color.png
+
+newmtl exterior_door_wall
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.165549 0.195569 0.281009
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd exterior_door_color.png
+
+newmtl exterior_door_white
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd exterior_door_color.png

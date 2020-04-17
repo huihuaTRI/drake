@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<sdf version="1.6" xmlns:drake="drake.mit.edu">
+  <model name="wine_bottle">
+    <link name="link_wine_bottle">
+      <inertial>
+        <pose frame="">0.0000e+00 0.0000e+00 1.1700e-01 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <mass>1.853</mass>
+        <inertia>
+          <ixx>0.012</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.012</iyy>
+          <iyz>0</iyz>
+          <izz>0.002</izz>
+        </inertia>
+      </inertial>
+      <visual name="link_wine_bottle">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_wine_bottle.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>texture_maps/link_wine_bottle_Bake1_pbr_diffuse.png</drake:diffuse_map>
+          <drake:normal_map>texture_maps/link_wine_bottle_Bake1_pbr_normal.png</drake:normal_map>
+          <drake:roughness_map>texture_maps/link_wine_bottle_Bake1_pbr_roughness.png</drake:roughness_map>
+          <drake:transparency_map>texture_maps/link_wine_bottle_Bake1_pbr_transparency.png</drake:transparency_map>
+          <drake:alpha_map>texture_maps/link_wine_bottle_Bake1_pbr_alpha.png</drake:alpha_map>
+        </material>
+      </visual>
+      <collision name="Cylinder">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cylinder.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="Cylinder.001">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cylinder.001.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

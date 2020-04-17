@@ -1,0 +1,4 @@
+newmtl default_material
+illum 1
+Ns 0.000000
+map_Kd tea_bottle.png

@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='tea_bottle'>
+    <link name='tea_bottle'>
+      <!-- The inertia is computed assuming uniform density
+           cylinder, and the mass is obtained by weighing a full bottle. -->
+      <!-- TODO(siyuan): Check dimension and inertia consistency with reality
+           and mesh. -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.540</mass>
+        <inertia>
+          <ixx> 0.00205221375 </ixx>
+          <ixy> 0 </ixy>
+          <ixz> 0 </ixz>
+          <iyy> 0.00205221375 </iyy>
+          <iyz> 0 </iyz>
+          <izz> 0.0002851875 </izz>
+        </inertia>
+      </inertial>
+
+      <visual name='mesh'>
+        <pose>0.0 0.0 0.0 0.0 -0.0 0.0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>tea_bottle.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name='collision_cylinder'>
+        <geometry>
+          <cylinder>
+            <radius>.0325</radius>
+            <length>.206</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_0">
+        <pose>.0325 0 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_1">
+        <pose>0 .0325 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_2">
+        <pose>-0.0325 0 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_3">
+        <pose>0 -0.0325 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_4">
+        <pose>0.02298 0.02298 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_5">
+        <pose>0.02298 -0.02298 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_6">
+        <pose>-0.02298 0.02298 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="bottom_sphere_collision_7">
+        <pose>-0.02298 -0.02298 -0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_0">
+        <pose>.0325 0 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_1">
+        <pose>0 .0325 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_2">
+        <pose>-0.0325 0 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_3">
+        <pose>0 -0.0325 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_4">
+        <pose>0.02298 0.02298 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_5">
+        <pose>0.02298 -0.02298 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_6">
+        <pose>-0.02298 0.02298 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+
+      <collision name="top_sphere_collision_7">
+        <pose>-0.02298 -0.02298 0.104 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>2e-3</radius>
+          </sphere>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,472 @@
+<?xml version="1.0"?>
+<!-- Minimal generated SDF -->
+<sdf version='1.6'>
+  <model name='exterior_door_frame'>
+    <link name='exterior_door_frame'>
+    <inertial>
+        <pose frame="">7.9737e-03 6.8264e-03 5.1174e-03 0 0 0</pose>
+        <mass>1e2</mass>
+        <inertia>
+          <ixx>1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1</iyy>
+          <iyz>0</iyz>
+          <izz>1</izz>
+        </inertia>
+      </inertial>
+      <visual name='exterior_door_frame'>
+        <pose>0.0 0.0 0.0 0.0 -0.0 0.0</pose>
+        <geometry>
+          <mesh>
+            <uri>../meshes/exterior_door_frame.obj</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <!-- The way that Drake picks up the texture file. The diffuse tag
+          will be ignored if the drake:diffuse_map exists-->
+          <diffuse>1 0 0 0.1</diffuse>
+          <drake:diffuse_map>
+            ../meshes/exterior_door_color.png
+          </drake:diffuse_map>
+        </material>
+      </visual>
+        <collision name="collision_box_wall_001">
+          <pose>-0.865186 -0.000195 1.20788 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.744 0.115 2.416</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_wall_002">
+          <pose>0.865186 -0.000195 1.20788 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.744 0.115 2.416</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_wall_003">
+          <pose>0.0 -0.000195 2.24743 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>2.4681 0.109109 0.336892</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_frame_001">
+          <pose>-0.488889 -0.000628 1.05458 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.062642 0.141404 2.11065</size>
+                 </box>
+               </geometry>
+        </collision>
+
+<!-- Collision Blocks for the latch hole -->
+
+        <collision name="collision_box_frame_latch_001">
+          <pose>0.488889 -0.000628 1.48662 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.062642 0.141404 1.24657</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_frame_latch_002">
+          <pose>0.488889 0.057667 0.853381 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.062642 0.024814 0.019913</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_frame_latch_003">
+          <pose>0.495862 0.036581 0.853381 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.048695 0.017358 0.019913</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_frame_latch_004">
+          <pose>0.488889 -0.021714 0.853381 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.062642 0.099232 0.019913</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_frame_latch_005">
+          <pose>0.488889 -0.000628 0.42134 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.062642 0.141404 0.84417</size>
+                 </box>
+               </geometry>
+        </collision>
+
+<!-- End of Collision Blocks for the latch hole -->
+
+        <collision name="collision_box_frame_002">
+          <pose>0.0 -0.000628 2.07222 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.91657 0.141404 0.07535</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_bottom_ramp_box_001">
+          <pose>0.0 -0.036589 0.004421 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.934852 0.084371 0.009815</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_bottom_ramp_box_incline">
+          <pose>0.0 -0.026274 0.011581 0.180913 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.934852 0.087413 0.012055</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_bottom_black_bar">
+          <pose>0.0 0.035083 0.013043 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.92355 0.04514 0.0254</size>
+                 </box>
+               </geometry>
+        </collision>
+    </link>
+
+
+    <link name='exterior_door'>
+      <inertial>
+        <pose frame="">7.9737e-03 6.8264e-03 5.1174e-03 0 0 0</pose>
+        <mass>10</mass>
+        <inertia>
+          <ixx>1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1</iyy>
+          <iyz>0</iyz>
+          <izz>1</izz>
+        </inertia>
+      </inertial>
+      <visual name='exterior_door'>
+        <pose>-0.45944 0.07119 1.02649 0.0 -0.0 0.0</pose>
+        <geometry>
+          <mesh>
+            <uri>../meshes/exterior_door.obj</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>
+            ../meshes/exterior_door_color.png
+          </drake:diffuse_map>
+        </material>
+      </visual>
+      <collision name="collision_box_door">
+        <pose>-0.0 0.036 1.02904 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9144 0.04445 2.007</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_cylinder_handle_escutcheon_001">
+        <pose>0.38688 0.0354 0.853382 1.5708 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0585</length>
+            <radius>0.0355</radius>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="collision_cylinder_handle_escutcheon_002">
+        <pose>0.38688 0.0354 0.853382 1.5708 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0755</length>
+            <radius>0.014</radius>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name='exterior_door_handle'>
+      <inertial>
+        <pose frame="">7.9737e-03 6.8264e-03 5.1174e-03 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>5.20e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>-7.51e-06</ixz>
+          <iyy>166e-06</iyy>
+          <iyz>0</iyz>
+          <izz>169e-06</izz>
+        </inertia>
+      </inertial>
+      <visual name='exterior_door_handle'>
+        <pose>0.387186 0.035427 0.853397 0.0 -0.0 0.0</pose>
+        <geometry>
+          <mesh>
+            <uri>../meshes/exterior_door_handle.obj</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>
+            ../meshes/exterior_door_color.png
+          </drake:diffuse_map>
+        </material>
+      </visual>
+
+        <collision name="collision_cylinder_stem">
+          <pose>0.387186 0.035427 0.853397 1.5708 0.0 0.0</pose>
+               <geometry>
+                 <cylinder>
+                   <radius>0.018</radius>
+                   <length>0.170506</length>
+                 </cylinder>
+               </geometry>
+        </collision>
+
+        <!-- collision meshes for right handle.-->
+
+        <collision name="collision_cylinder_pommel_right">
+          <pose>0.386865 -0.041568 0.853458 1.5708 0.0 0.0</pose>
+               <geometry>
+                 <cylinder>
+                   <radius>0.022</radius>
+                   <length>0.017253</length>
+                 </cylinder>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_right_001">
+          <pose>0.371112 -0.041367 0.862406 0.0 -0.060521 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.026904 0.015296 0.026904</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_right_002">
+          <pose>0.331095 -0.040619 0.856316 0.0 -0.443974 -0.016264</pose>
+               <geometry>
+                 <box>
+                   <size>0.065594 0.017729 0.01367</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_right_003">
+          <pose>0.292967 -0.040654 0.837617 0.0 -0.39968 -0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.029169 0.018992 0.011425</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_right_004">
+          <pose>0.269998 -0.040767 0.830543 0.0 -0.172036 -0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.028944 0.020365 0.009698</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_cylinder_spine_bottom_right">
+          <pose>0.254456 -0.040767 0.828399 0.0 -0.051273 0.0</pose>
+               <geometry>
+                 <cylinder>
+                   <radius>0.0125</radius>
+                   <length>0.00944</length>
+                 </cylinder>
+               </geometry>
+        </collision>
+
+        <!-- collision meshes for left handle. -->
+
+        <collision name="collision_cylinder_pommel_left">
+          <pose>0.386865 0.112875 0.853458 1.5708 0.0 0.0</pose>
+               <geometry>
+                 <cylinder>
+                   <radius>0.022</radius>
+                   <length>0.017253</length>
+                 </cylinder>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_left_001">
+          <pose>0.371112 0.11222 0.862406 0.0 -0.060521 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.026904 0.015296 0.026904</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_left_002">
+          <pose>0.331095 0.111472 0.856316 0.0 -0.443974 -0.016264</pose>
+               <geometry>
+                 <box>
+                   <size>0.065594 0.017729 0.01367</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_left_003">
+          <pose>0.292967 0.111507 0.837617 0.0 -0.39968 -0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.029169 0.018992 0.011425</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_box_spine_left_004">
+          <pose>0.269998 0.11162 0.830543 0.0 -0.172036 -0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.028944 0.020365 0.009698</size>
+                 </box>
+               </geometry>
+        </collision>
+
+        <collision name="collision_cylinder_spine_bottom_left">
+          <pose>0.254456 0.11162 0.828399 0.0 -0.051273 0.0</pose>
+               <geometry>
+                 <cylinder>
+                   <radius>0.0125</radius>
+                   <length>0.00944</length>
+                 </cylinder>
+               </geometry>
+        </collision>
+
+    </link>
+
+    <link name='exterior_door_latch'>
+    <inertial>
+        <pose frame="">7.9737e-03 6.8264e-03 5.1174e-03 0 0 0</pose>
+        <mass>1e2</mass>
+        <inertia>
+          <ixx>1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1</iyy>
+          <iyz>0</iyz>
+          <izz>1</izz>
+        </inertia>
+      </inertial>
+      <visual name='exterior_door_latch'>
+        <pose>0.456427 0.036581 0.853381 0.0 -0.0 0.0</pose>
+        <geometry>
+          <mesh>
+            <uri>../meshes/exterior_door_latch.obj</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1 0 0 0.1</diffuse>
+          <drake:diffuse_map>
+            ../meshes/exterior_door_color.png
+          </drake:diffuse_map>
+        </material>
+      </visual>
+        <collision name="collision_box_latch_001">
+          <pose>0.456427 0.036581 0.853381 0.0 0.0 0.0</pose>
+               <geometry>
+                 <box>
+                   <size>0.030176 0.017358 0.019913</size>
+                 </box>
+               </geometry>
+        </collision>
+    </link>
+
+    <joint name='exterior_door_hinge' type='revolute'>
+      <child>exterior_door</child>
+      <parent>exterior_door_frame</parent>
+      <pose frame=''>-0.45944 0.07119 1.02649 0 -0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <effort>0</effort>
+          <lower>0</lower>
+          <upper>2.0</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+          <friction>0.5</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>2.0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <joint name='exterior_door_handle_hinge' type='revolute'>
+      <child>exterior_door_handle</child>
+      <parent>exterior_door</parent>
+      <pose frame=''>0.387186 0.035427 0.853397 0 -0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <effort>0</effort>
+          <lower>-1.0</lower>
+          <upper>1.0</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+          <friction>0.5</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>2.0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <joint name='exterior_door_latch_joint' type='prismatic'>
+      <child>exterior_door_latch</child>
+      <parent>exterior_door</parent>
+      <pose frame=''>0.456427 0.036581 0.853381 0 -0 0</pose>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <effort>0</effort>
+          <lower>-1.0</lower>
+          <upper>1.0</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+          <friction>0.5</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>2.0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+
+  </model>
+</sdf>
