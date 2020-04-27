@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<sdf version="1.6" xmlns:drake="drake.mit.edu">
+  <model name="cereal_box">
+    <link name="link_cereal_box">
+      <inertial>
+        <pose frame="">0.0000e+00 0.0000e+00 1.7200e-01 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <mass>0.719</mass>
+        <inertia>
+          <ixx>0.008</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.011</iyy>
+          <iyz>0</iyz>
+          <izz>0.004</izz>
+        </inertia>
+      </inertial>
+      <visual name="link_cereal_box">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_cereal_box.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>meshes/link_cereal_box_Bake1_pbr_diffuse.png</drake:diffuse_map>
+          <drake:specular_map>meshes/link_cereal_box_Bake1_pbr_specular.png</drake:specular_map>
+          <drake:roughness_map>meshes/link_cereal_box_Bake1_pbr_roughness.png</drake:roughness_map>
+        </material>
+      </visual>
+      <collision name="cereal_box_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/cereal_box_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

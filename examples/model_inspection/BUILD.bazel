@@ -10,5 +10,8 @@ filegroup(
         "tea_bottle/**",
         "wine_bottle/**",
         "exterior_door_2020-02-14_01/**",
+        "beer_bottle/**",
+        "cereal_box/**",
+        "*.sdf"
     ]),
 )

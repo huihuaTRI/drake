@@ -1,0 +1,17 @@
+# Blender MTL File: 'sdf_source.blend'
+# Material Count: 1
+
+newmtl storage_cabinet_door_R_baked
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump link_storage_cabinet_door_R_Bake1_pbr_normal.png
+map_Kd link_storage_cabinet_door_R_Bake1_pbr_diffuse.png
+map_Ks link_storage_cabinet_door_R_Bake1_pbr_specular.png
+map_Ns link_storage_cabinet_door_R_Bake1_pbr_roughness.png
+refl link_storage_cabinet_door_R_Bake1_pbr_metalness.png

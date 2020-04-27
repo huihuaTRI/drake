@@ -1,0 +1,349 @@
+<?xml version="1.0" ?>
+<sdf version="1.6" xmlns:drake="drake.mit.edu">
+  <model name="storage_cabinet">
+    <link name="link_storage_cabinet_body">
+      <inertial>
+        <pose frame="">-7.0000e-03 6.1000e-02 9.4000e-01 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <mass>198.026</mass>
+        <inertia>
+          <ixx>92.421</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>117.554</iyy>
+          <iyz>0</iyz>
+          <izz>39.481</izz>
+        </inertia>
+      </inertial>
+      <visual name="link_storage_cabinet_body">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>meshes/link_storage_cabinet_body_Bake1_pbr_diffuse.png</drake:diffuse_map>
+          <drake:normal_map>meshes/link_storage_cabinet_body_Bake1_pbr_normal.png</drake:normal_map>
+          <drake:specular_map>meshes/link_storage_cabinet_body_Bake1_pbr_specular.png</drake:specular_map>
+          <drake:roughness_map>meshes/link_storage_cabinet_body_Bake1_pbr_roughness.png</drake:roughness_map>
+          <drake:metalness_map>meshes/link_storage_cabinet_body_Bake1_pbr_metalness.png</drake:metalness_map>
+        </material>
+      </visual>
+      <collision name="link_storage_cabinet_body.001_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_2">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_2.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_3">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_3.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_4">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_4.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_5">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_5.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_6">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_6.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.001_hull_7">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.001_hull_7.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.002_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.002_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.003_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.003_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.004_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.004_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.005_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.005_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.006_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.006_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.007_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.007_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_body.008_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_body.008_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+    <link name="link_storage_cabinet_door_L">
+      <inertial>
+        <pose frame="">3.2400e-01 -3.1100e-01 9.3400e-01 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <mass>15.273</mass>
+        <inertia>
+          <ixx>3.683</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>4.186</iyy>
+          <iyz>0</iyz>
+          <izz>0.506</izz>
+        </inertia>
+      </inertial>
+      <visual name="link_storage_cabinet_door_L">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_door_L.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>meshes/link_storage_cabinet_door_L_Bake1_pbr_diffuse.png</drake:diffuse_map>
+          <drake:normal_map>meshes/link_storage_cabinet_door_L_Bake1_pbr_normal.png</drake:normal_map>
+          <drake:specular_map>meshes/link_storage_cabinet_door_L_Bake1_pbr_specular.png</drake:specular_map>
+          <drake:roughness_map>meshes/link_storage_cabinet_door_L_Bake1_pbr_roughness.png</drake:roughness_map>
+          <drake:metalness_map>meshes/link_storage_cabinet_door_L_Bake1_pbr_metalness.png</drake:metalness_map>
+        </material>
+      </visual>
+      <collision name="Cube">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="Cube.001">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.001.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="Cube.002">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.002.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_door_L.001_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_door_L.001_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+    <link name="link_storage_cabinet_door_R">
+      <inertial>
+        <pose frame="">-3.2400e-01 -3.1100e-01 9.3400e-01 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <mass>15.276</mass>
+        <inertia>
+          <ixx>3.684</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>4.188</iyy>
+          <iyz>0</iyz>
+          <izz>0.506</izz>
+        </inertia>
+      </inertial>
+      <visual name="link_storage_cabinet_door_R">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_door_R.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <drake:diffuse_map>meshes/link_storage_cabinet_door_R_Bake1_pbr_diffuse.png</drake:diffuse_map>
+          <drake:normal_map>meshes/link_storage_cabinet_door_R_Bake1_pbr_normal.png</drake:normal_map>
+          <drake:specular_map>meshes/link_storage_cabinet_door_R_Bake1_pbr_specular.png</drake:specular_map>
+          <drake:roughness_map>meshes/link_storage_cabinet_door_R_Bake1_pbr_roughness.png</drake:roughness_map>
+          <drake:metalness_map>meshes/link_storage_cabinet_door_R_Bake1_pbr_metalness.png</drake:metalness_map>
+        </material>
+      </visual>
+      <collision name="Cube.003">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.003.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="Cube.004">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.004.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="Cube.005">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cube.005.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="link_storage_cabinet_door_R.001_hull_1">
+        <pose frame="">0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00 0.0000e+00</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/link_storage_cabinet_door_R.001_hull_1.obj</uri>
+            <scale>1.0000e+00 1.0000e+00 1.0000e+00</scale>
+            <drake:declare_convex/>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="link_storage_cabinet_body_link_storage_cabinet_door_L" type="revolute">
+      <child>link_storage_cabinet_door_L</child>
+      <parent>link_storage_cabinet_body</parent>
+      <pose frame="">6.4861e-01 -2.9715e-01 9.5511e-01 0.0000e+00 -0.0000e+00 0.0000e+00</pose>
+      <axis>
+        <xyz>0.0 0.0 1.0</xyz>
+        <limit>
+          <effort>0</effort>
+          <lower>0.0</lower>
+          <upper>1.832595705986023</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint name="link_storage_cabinet_body_link_storage_cabinet_door_R" type="revolute">
+      <child>link_storage_cabinet_door_R</child>
+      <parent>link_storage_cabinet_body</parent>
+      <pose frame="">-6.4853e-01 -2.9713e-01 9.5511e-01 0.0000e+00 -0.0000e+00 0.0000e+00</pose>
+      <axis>
+        <xyz>0.0 0.0 1.0</xyz>
+        <limit>
+          <effort>0</effort>
+          <lower>-1.832595705986023</lower>
+          <upper>0.0</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+  </model>
+</sdf>
