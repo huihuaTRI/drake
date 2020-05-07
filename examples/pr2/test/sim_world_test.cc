@@ -12,9 +12,9 @@ namespace {
 
 GTEST_TEST(SimWorldTest, ConstructionTest) {
   const std::string kRobotName = "pr2";
-  SimWorld<double> sim_world(std::vector<std::string>{kRobotName});
+  SimWorld<double> sim_world(kRobotName);
 
-  const auto& robot_plant = sim_world.get_robot_plant(kRobotName);
+  const auto& robot_plant = sim_world.get_robot_plant();
 
   EXPECT_EQ(robot_plant.num_actuators(), 28);
   EXPECT_EQ(robot_plant.num_positions(), 28);

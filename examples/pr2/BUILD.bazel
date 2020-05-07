@@ -11,36 +11,43 @@ load("//tools/install:install_data.bzl", "install_data")
 package(default_visibility = ["//visibility:public"])
 
 drake_cc_library(
-    name = "common",
+    name = "parameters",
+    srcs = [
+        "robot_parameters_loader.cc",
+    ],
     hdrs = [
-        "model_instance_info.h",
+        "robot_parameters.h",
+        "robot_parameters_loader.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//math:geometric_transform",
+        "//common:essential",
+        "//common/yaml:yaml_read_archive",
+        "//geometry:scene_graph",
         "//multibody/plant",
     ],
 )
 
 drake_cc_library(
-    name = "parameters",
-    srcs = [
-        "robot_parameters_loader.cc",
-        "sim_parameters.cc",
-    ],
-    hdrs = [
-        "robot_parameters.h",
-        "robot_parameters_loader.h",
-        "sim_parameters.h",
-    ],
-    visibility = ["//visibility:public"],
+    name = "inverse_dynamics_controller",
+    srcs = ["inverse_dynamics_controller.cc"],
+    hdrs = ["inverse_dynamics_controller.h"],
     deps = [
-        ":common",
+        ":parameters",
         "//common:essential",
-        "//common/yaml:yaml_read_archive",
-        "//geometry:scene_graph",
-        "//multibody/tree",
-        "@gflags",
+        "//multibody/plant",
+        "//systems/controllers",
+        "//systems/primitives:matrix_gain",
+    ],
+)
+
+drake_cc_library(
+    name = "main_controller",
+    srcs = ["main_controller.cc"],
+    hdrs = ["main_controller.h"],
+    deps = [
+        ":inverse_dynamics_controller",
+        "//systems/framework",
     ],
 )
 
@@ -58,7 +65,6 @@ drake_cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":common",
         ":parameters",
         "//common:find_resource",
         "//geometry:scene_graph",
@@ -83,6 +89,19 @@ drake_cc_googletest(
     ],
     deps = [
         ":parameters",
+    ],
+)
+
+drake_cc_googletest(
+    name = "main_controller_test",
+    data = [
+        ":config",
+        ":models",
+    ],
+    deps = [
+        ":main_controller",
+        "//multibody/parsing",
+        "//multibody/plant",
     ],
 )
 
