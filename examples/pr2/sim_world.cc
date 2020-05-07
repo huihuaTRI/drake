@@ -3,9 +3,10 @@
 #include <unordered_set>
 #include <utility>
 
+#include <gflags/gflags.h>
+
 #include "drake/common/find_resource.h"
 #include "drake/examples/pr2/robot_parameters_loader.h"
-#include "drake/examples/pr2/sim_parameters.h"
 #include "drake/geometry/render/render_engine_vtk_factory.h"
 #include "drake/multibody/benchmarks/inclined_plane/inclined_plane_plant.h"
 #include "drake/multibody/parsing/parser.h"
@@ -16,6 +17,9 @@
 namespace drake {
 namespace examples {
 namespace pr2 {
+
+DEFINE_double(time_step, 1.0e-3,
+              "Simulation time step used for the discrete systems.");
 
 using drake::geometry::SceneGraph;
 using drake::geometry::render::MakeRenderEngineVtk;
@@ -30,13 +34,21 @@ using drake::systems::Context;
 using drake::systems::Diagram;
 using drake::systems::State;
 
+constexpr double kGravity = 9.8;
+constexpr double kPenetrationAllowance = 0.6;
+constexpr double kVStictionTolerance = 0.6;
+constexpr double kInclinedPlaneStaticFrictionCoef = 0.6;
+constexpr double kInclinedPlaneKineticFrictionCoef = 0.6;
+
 template <typename T>
-SimWorld<T>::SimWorld(const std::vector<std::string>& robot_names)
-    : robot_names_(robot_names),
-      owned_plant_(
-          std::make_unique<MultibodyPlant<T>>(pr2::sim_flags().time_step)),
-      owned_scene_graph_(std::make_unique<SceneGraph<T>>()) {
-  DRAKE_DEMAND(robot_names.size() > 0);
+SimWorld<T>::SimWorld(const std::string& robot_name)
+    : robot_name_(robot_name),
+      owned_plant_(std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)),
+      owned_scene_graph_(std::make_unique<SceneGraph<T>>()),
+      owned_robot_plant_(std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)),
+      owned_welded_robot_plant_(
+          std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)) {
+  DRAKE_DEMAND(!robot_name.empty());
   // This class holds the unique_ptrs explicitly for plant and scene_graph
   // until Finalize() is called (when they are moved into the Diagram). Grab
   // the raw pointers, which should stay valid for the lifetime of the Diagram.
@@ -50,9 +62,7 @@ SimWorld<T>::SimWorld(const std::vector<std::string>& robot_names)
   plant_->RegisterAsSourceForSceneGraph(scene_graph_);
   plant_->set_name("sim_world_plant");
 
-  LoadModelsFromUrdfs();
-
-  SetupSimWorld();
+  LoadModelsAndSetSimWorld();
 
   Finalize();
 
@@ -62,42 +72,38 @@ SimWorld<T>::SimWorld(const std::vector<std::string>& robot_names)
 // Add default pr2.
 template <typename T>
 void SimWorld<T>::AddRobotModel(const std::string& robot_name) {
-  auto robot_parameters = LoadRobotParameters(robot_name);
-  DRAKE_DEMAND(robot_parameters.name == robot_name);
+  const std::string filepath_prefix = "drake/examples/pr2/config/";
+  DRAKE_DEMAND(
+      ReadParametersFromFile(robot_name, filepath_prefix, &robot_parameters_));
+  DRAKE_DEMAND(robot_parameters_.name == robot_name);
 
   const std::string model_path =
-      FindResourceOrThrow(robot_parameters.model_instance_info.model_path);
+      FindResourceOrThrow(robot_parameters_.model_instance_info.model_path);
   Parser parser(plant_);
   const multibody::ModelInstanceIndex model_instance_index =
       parser.AddModelFromFile(model_path, robot_name);
 
   // Filling the rest of the model instance information.
-  robot_parameters.model_instance_info.model_path = model_path;
-  robot_parameters.model_instance_info.index = model_instance_index;
-  robot_parameters.model_instance_info.X_PC =
+  robot_parameters_.model_instance_info.model_path = model_path;
+  robot_parameters_.model_instance_info.index = model_instance_index;
+  robot_parameters_.model_instance_info.X_PC =
       RigidTransform<double>::Identity();
-
-  robots_parameters_.insert({robot_name, robot_parameters});
 }
 
 template <typename T>
-void SimWorld<T>::LoadModelsFromUrdfs() {
-  for (const auto& robot_name : robot_names_) {
-    this->AddRobotModel(robot_name);
+void SimWorld<T>::LoadModelsAndSetSimWorld() {
+  // Add a ground plane.
+  {
+    const multibody::CoulombFriction<double> coef_friction_inclined_plane(
+        kInclinedPlaneStaticFrictionCoef, kInclinedPlaneKineticFrictionCoef);
+    multibody::benchmarks::inclined_plane::AddInclinedPlaneAndGravityToPlant(
+        kGravity, 0.0, std::nullopt, coef_friction_inclined_plane, plant_);
   }
 
-  // TODO(huihua.zhao) Add an environment world here.
-}
+  // Add a robot model.
+  AddRobotModel(robot_name_);
 
-template <typename T>
-const pr2::RobotParameters SimWorld<T>::LoadRobotParameters(
-    const std::string& robot_name) const {
-  pr2::RobotParameters robot_parameters;
-  // This variable can be moved to parameters once we have more than one robot.
-  const std::string filepath_prefix = "drake/examples/pr2/config/";
-  DRAKE_DEMAND(pr2::ReadParametersFromFile(robot_name, filepath_prefix,
-                                           &robot_parameters));
-  return robot_parameters;
+  // Other environmental models can be added here.
 }
 
 template <typename T>
@@ -106,44 +112,17 @@ void SimWorld<T>::SetDefaultState(const Context<T>& context,
   // Call the base class method, to initialize all systems in this diagram.
   Diagram<T>::SetDefaultState(context, state);
 
-  for (const auto& [robot_name, robot_parameters] : robots_parameters_) {
-    drake::log()->info("Setting initial position of robot: " + robot_name);
-    const auto& robot_instance = robot_parameters.model_instance_info.index;
-    SetModelPositionState(context, robot_instance,
-                          GetModelPositionState(context, robot_instance),
-                          state);
-    SetModelVelocityState(context, robot_instance,
-                          GetModelVelocityState(context, robot_instance),
-                          state);
-  }
-}
-
-template <typename T>
-void SimWorld<T>::SetupSimWorld() {
-  const auto& sim_flags = pr2::sim_flags();
-  // Add a ground plane.
-  {
-    const multibody::CoulombFriction<double> coef_friction_inclined_plane(
-        sim_flags.inclined_plane_coef_static_friction,
-        sim_flags.inclined_plane_coef_kinetic_friction);
-    multibody::benchmarks::inclined_plane::AddInclinedPlaneAndGravityToPlant(
-        sim_flags.gravity, 0.0, std::nullopt, coef_friction_inclined_plane,
-        plant_);
-  }
-}
-
-template <typename T>
-VectorX<T> SimWorld<T>::GetModelPositionState(
-    const Context<T>& context, const ModelInstanceIndex& model_index) const {
   const auto& plant_context = this->GetSubsystemContext(*plant_, context);
-  return plant_->GetPositions(plant_context, model_index);
-}
 
-template <typename T>
-VectorX<T> SimWorld<T>::GetModelVelocityState(
-    const Context<T>& context, const ModelInstanceIndex& model_index) const {
-  const auto& plant_context = this->GetSubsystemContext(*plant_, context);
-  return plant_->GetVelocities(plant_context, model_index);
+  drake::log()->info("Setting initial position of robot: " + robot_name_);
+  const auto& robot_instance_index =
+      robot_parameters_.model_instance_info.index;
+  SetModelPositionState(
+      context, robot_instance_index,
+      plant_->GetPositions(plant_context, robot_instance_index), state);
+  SetModelVelocityState(
+      context, robot_instance_index,
+      plant_->GetVelocities(plant_context, robot_instance_index), state);
 }
 
 template <typename T>
@@ -172,38 +151,28 @@ void SimWorld<T>::SetModelVelocityState(
 
 template <typename T>
 void SimWorld<T>::MakeRobotControlPlants() {
-  // Build the robot plants for controller purpose. It contains both the
-  // floating robot model and the same model but with the base welded to
-  // the ground.
-  for (const auto& [robot_name, robot_parameters] : robots_parameters_) {
-    OwnedRobotControllerPlant owned_plants(pr2::sim_flags().time_step);
-    const pr2::ModelInstanceInfo model_info =
-        robot_parameters.model_instance_info;
-    Parser(owned_plants.float_plant.get())
-        .AddModelFromFile(model_info.model_path);
-    owned_plants.float_plant->set_name(robot_name);
-    owned_plants.float_plant->Finalize();
+  // Build the fmk plants for controller purpose. It contains both the floating
+  // FMK robot model and the same model but with the base welded to the ground.
+  const auto& model_info = robot_parameters_.model_instance_info;
+  Parser(owned_robot_plant_.get()).AddModelFromFile(model_info.model_path);
+  owned_robot_plant_->set_name("robot_plant");
+  owned_robot_plant_->Finalize();
 
-    // Create the welded version for inverse dynamic controller.
-    const auto welded_robot_model =
-        Parser(owned_plants.welded_plant.get())
-            .AddModelFromFile(model_info.model_path);
+  // Create the welded version for inverse dynamic controller.
+  const auto welded_robot_model = Parser(owned_welded_robot_plant_.get())
+                                      .AddModelFromFile(model_info.model_path);
 
-    // The welded plant is only used for the inverse dynamics controller
-    // calculation purpose. Weld the plant only it's a floating base robot.
-    if (model_info.is_floating_base) {
-      owned_plants.welded_plant->WeldFrames(
-          owned_plants.welded_plant->world_frame(),
-          owned_plants.welded_plant->GetFrameByName(model_info.child_frame_name,
-                                                    welded_robot_model),
-          model_info.X_PC);
-    }
-
-    owned_plants.welded_plant->set_name("welded_" + robot_name);
-    owned_plants.welded_plant->Finalize();
-
-    owned_robots_plants_.insert({robot_name, std::move(owned_plants)});
+  // The welded plant is only used for the inverse dynamics controller
+  // calculation purpose. Weld the plant only it's a floating base robot.
+  if (model_info.is_floating_base) {
+    owned_welded_robot_plant_->WeldFrames(
+        owned_welded_robot_plant_->world_frame(),
+        owned_welded_robot_plant_->GetFrameByName(model_info.child_frame_name,
+                                                  welded_robot_model),
+        model_info.X_PC);
   }
+  owned_welded_robot_plant_->set_name("welded_" + robot_name_);
+  owned_welded_robot_plant_->Finalize();
 }
 
 template <typename T>
@@ -214,10 +183,8 @@ void SimWorld<T>::Finalize() {
   //   - cannot finalize plant until all of the objects are added, and
   //   - cannot wire up the diagram until we have finalized the plant.
   plant_->Finalize();
-
-  const auto& sim_flags = pr2::sim_flags();
-  plant_->set_penetration_allowance(sim_flags.penetration_allowance);
-  plant_->set_stiction_tolerance(sim_flags.v_stiction_tolerance);
+  plant_->set_penetration_allowance(kPenetrationAllowance);
+  plant_->set_stiction_tolerance(kVStictionTolerance);
 
   systems::DiagramBuilder<T> builder;
   builder.AddSystem(std::move(owned_plant_));
@@ -229,37 +196,35 @@ void SimWorld<T>::Finalize() {
   builder.Connect(scene_graph_->get_query_output_port(),
                   plant_->get_geometry_query_input_port());
 
-  for (const auto& [robot_name, robot_parameters] : robots_parameters_) {
-    const auto& robot_instance = robot_parameters.model_instance_info.index;
-    const int num_robot_positions = plant_->num_positions(robot_instance);
-    const int num_robot_velocities = plant_->num_velocities(robot_instance);
+  const auto& robot_instance = robot_parameters_.model_instance_info.index;
+  const int num_robot_positions = plant_->num_positions(robot_instance);
+  const int num_robot_velocities = plant_->num_velocities(robot_instance);
 
-    // Export Robot "state" outputs.
-    {
-      auto demux = builder.template AddSystem<systems::Demultiplexer>(
-          std::vector<int>{num_robot_positions, num_robot_velocities});
-      builder.Connect(plant_->get_state_output_port(robot_instance),
-                      demux->get_input_port(0));
-      builder.ExportOutput(demux->get_output_port(0),
-                           robot_name + "_position_measured");
-      builder.ExportOutput(demux->get_output_port(1),
-                           robot_name + "_velocity_estimated");
-      builder.ExportOutput(plant_->get_state_output_port(robot_instance),
-                           robot_name + "_state_estimated");
-    }
+  // Export Robot "state" outputs.
+  {
+    auto demux = builder.template AddSystem<systems::Demultiplexer>(
+        std::vector<int>{num_robot_positions, num_robot_velocities});
+    builder.Connect(plant_->get_state_output_port(robot_instance),
+                    demux->get_input_port(0));
+    builder.ExportOutput(demux->get_output_port(0),
+                         robot_name_ + "_position_measured");
+    builder.ExportOutput(demux->get_output_port(1),
+                         robot_name_ + "_velocity_estimated");
+    builder.ExportOutput(plant_->get_state_output_port(robot_instance),
+                         robot_name_ + "_state_estimated");
+  }
 
-    // Connect the states with controllers. A constant zero control source is
-    // connected for now.
-    {
-      VectorX<double> constant_actuation_value =
-          VectorX<double>::Zero(plant_->num_actuators());
-      auto& actuation_constant_source =
-          *builder.template AddSystem<systems::ConstantVectorSource<double>>(
-              constant_actuation_value);
+  // Connect the states with controllers. A constant zero control source is
+  // connected for now.
+  {
+    VectorX<double> constant_actuation_value =
+        VectorX<double>::Zero(plant_->num_actuators());
+    auto& actuation_constant_source =
+        *builder.template AddSystem<systems::ConstantVectorSource<double>>(
+            constant_actuation_value);
 
-      builder.Connect(actuation_constant_source.get_output_port(),
-                      plant_->get_actuation_input_port(robot_instance));
-    }
+    builder.Connect(actuation_constant_source.get_output_port(),
+                    plant_->get_actuation_input_port(robot_instance));
   }
 
   builder.ExportOutput(scene_graph_->get_pose_bundle_output_port(),
