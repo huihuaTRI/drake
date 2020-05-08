@@ -6,12 +6,16 @@
 #include <gflags/gflags.h>
 
 #include "drake/common/find_resource.h"
+#include "drake/examples/pr2/pr2_chassis_controller.h"
+#include "drake/examples/pr2/pr2_upper_body_controller.h"
 #include "drake/examples/pr2/robot_parameters_loader.h"
 #include "drake/geometry/render/render_engine_vtk_factory.h"
 #include "drake/multibody/benchmarks/inclined_plane/inclined_plane_plant.h"
 #include "drake/multibody/parsing/parser.h"
+#include "drake/systems/primitives/adder.h"
 #include "drake/systems/primitives/constant_vector_source.h"
 #include "drake/systems/primitives/demultiplexer.h"
+#include "drake/systems/primitives/matrix_gain.h"
 #include "drake/systems/primitives/pass_through.h"
 
 namespace drake {
@@ -199,6 +203,7 @@ void SimWorld<T>::Finalize() {
   const auto& robot_instance = robot_parameters_.model_instance_info.index;
   const int num_robot_positions = plant_->num_positions(robot_instance);
   const int num_robot_velocities = plant_->num_velocities(robot_instance);
+  const int robot_state_size = num_robot_positions + num_robot_velocities;
 
   // Export Robot "state" outputs.
   {
@@ -217,6 +222,84 @@ void SimWorld<T>::Finalize() {
   // Connect the states with controllers. A constant zero control source is
   // connected for now.
   {
+    // Creates desired state and estimated state passthroughs to connect to
+    // different controllers.
+    auto& desired_state_passthrough =
+        *builder.template AddSystem<drake::systems::PassThrough<double>>(
+            robot_state_size);
+    // Exposes the desired state port.
+    builder.ExportInput(desired_state_passthrough.get_input_port());
+
+    auto& estimated_state_passthrough =
+        *builder.template AddSystem<drake::systems::PassThrough<double>>(
+            robot_state_size);
+
+    // Create the upper body controller and connect the states.
+    auto& upper_body_controller =
+        *builder.template AddSystem<Pr2UpperBodyController>(
+            *owned_robot_plant_, *owned_welded_robot_plant_, robot_parameters_);
+    builder.Connect(desired_state_passthrough.get_output_port(),
+                    upper_body_controller.get_desired_state_input_port());
+    builder.Connect(estimated_state_passthrough.get_output_port(),
+                    upper_body_controller.get_estimated_state_input_port());
+
+    // Create the chassis controller and connect the states.
+    auto& chassis_controller =
+        *builder.template AddSystem<Pr2ChassisController>(*owned_robot_plant_,
+                                                          robot_parameters_);
+    builder.Connect(desired_state_passthrough.get_output_port(),
+                    chassis_controller.get_desired_state_input_port());
+    builder.Connect(estimated_state_passthrough.get_output_port(),
+                    chassis_controller.get_estimated_state_input_port());
+
+    // Create two selector matrix to pick the corresponding generalized forces
+    // for each of the controller.
+    Eigen::MatrixXd upper_body_selector =
+        Eigen::MatrixXd::Zero(num_robot_velocities, num_robot_velocities);
+    // Initially, we set all the joints to use upper body inverse dynamics
+    // controller.
+    const int num_robot_actuators = owned_robot_plant_->num_actuators();
+    upper_body_selector.bottomRightCorner(num_robot_actuators,
+                                          num_robot_actuators) =
+        Eigen::MatrixXd::Identity(num_robot_actuators, num_robot_actuators);
+
+    Eigen::MatrixXd chassis_selector =
+        Eigen::MatrixXd::Zero(num_robot_velocities, num_robot_velocities);
+    // Update the selector matrix.
+    for (const auto& joint_control_info :
+         chassis_controller.part_control_info()) {
+      const int joint_velocity_index = joint_control_info.velocity_index -
+                                       owned_robot_plant_->num_positions();
+      chassis_selector(joint_velocity_index, joint_velocity_index) = 1;
+      upper_body_selector(joint_velocity_index, joint_velocity_index) = 0;
+    }
+
+    // Create MatrixGain systems for the selectors.
+    auto& chassis_control_selector_system =
+        *builder.template AddSystem<drake::systems::MatrixGain<double>>(
+            chassis_selector);
+    builder.Connect(chassis_controller.get_generalized_force_output_port(),
+                    chassis_control_selector_system.get_input_port());
+
+    // Create the selector system of the upper body controller.
+    auto& upper_body_control_selector_system =
+        *builder.template AddSystem<drake::systems::MatrixGain<double>>(
+            upper_body_selector);
+    builder.Connect(upper_body_controller.get_generalized_force_output_port(),
+                    upper_body_control_selector_system.get_input_port());
+
+    // Create an adder to add these two controllers together.
+    auto& adder = *builder.template AddSystem<drake::systems::Adder<double>>(
+        2, num_robot_velocities);
+    builder.Connect(chassis_control_selector_system.get_output_port(),
+                    adder.get_input_port(0));
+    builder.Connect(upper_body_control_selector_system.get_output_port(),
+                    adder.get_input_port(1));
+
+    // Finally, connect the adder to the plant input.
+    builder.Connect(adder.get_output_port(),
+                    plant_->get_applied_generalized_force_input_port());
+
     VectorX<double> constant_actuation_value =
         VectorX<double>::Zero(plant_->num_actuators());
     auto& actuation_constant_source =

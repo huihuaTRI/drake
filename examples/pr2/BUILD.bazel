@@ -69,6 +69,8 @@ drake_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
+        ":pr2_chassis_controller",
+        ":pr2_upper_body_controller",
         "//common:find_resource",
         "//geometry:scene_graph",
         "//geometry/render:render_engine_vtk",

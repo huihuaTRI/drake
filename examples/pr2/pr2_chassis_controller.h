@@ -55,6 +55,10 @@ class Pr2ChassisController final : public systems::LeafSystem<double> {
   }
   //@}
 
+  const std::vector<JointControlInfo>& part_control_info() const {
+    return part_control_info_;
+  }
+
  private:
   systems::BasicVector<double> AllocateOutput() const {
     return systems::BasicVector<double>(num_velocities_);
