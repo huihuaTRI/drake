@@ -86,9 +86,9 @@ drake_cc_library(
 )
 
 drake_cc_binary(
-    name = "sim_runner",
+    name = "pr2_simulation",
     srcs = [
-        "sim_runner.cc",
+        "pr2_simulation.cc",
     ],
     visibility = ["//visibility:public"],
     deps = [
