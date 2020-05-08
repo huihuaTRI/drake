@@ -48,7 +48,7 @@ GTEST_TEST(RobotParametersLoaderTest, LoadingTest) {
       EXPECT_EQ(joint_parameters.position_limit_lower, kPositionLimitLower);
       EXPECT_EQ(joint_parameters.position_limit_upper, kPositionLimitUpper);
       EXPECT_EQ(joint_parameters.velocity_limit, kVelocityLimit);
-      EXPECT_EQ(joint_parameters.actuators_parameters[0].gains.kd, kPidGainKd);
+      EXPECT_EQ(joint_parameters.actuator_parameters.gains.kd, kPidGainKd);
     }
   }
   EXPECT_EQ(num_test_robot_joints, kNumTestRobotJoints);
