@@ -2,6 +2,7 @@
 
 load(
     "@drake//tools/skylark:drake_cc.bzl",
+    "drake_cc_binary",
     "drake_cc_googletest",
     "drake_cc_library",
 )
@@ -84,6 +85,22 @@ drake_cc_library(
     ],
 )
 
+drake_cc_binary(
+    name = "sim_runner",
+    srcs = [
+        "sim_runner.cc",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":sim_world",
+        "//geometry:geometry_visualization",
+        "//multibody/plant:contact_results_to_lcm",
+        "//systems/analysis:simulator",
+        "//systems/primitives:constant_vector_source",
+        "@gflags",
+    ],
+)
+
 # === test/ ===
 
 drake_cc_googletest(
@@ -98,13 +115,14 @@ drake_cc_googletest(
 )
 
 drake_cc_googletest(
-    name = "main_controller_test",
+    name = "pr2_controllers_test",
     data = [
         ":config",
         ":models",
     ],
     deps = [
-        ":main_controller",
+        ":pr2_chassis_controller",
+        ":pr2_upper_body_controller",
         "//multibody/parsing",
         "//multibody/plant",
     ],

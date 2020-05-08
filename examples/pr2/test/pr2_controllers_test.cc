@@ -1,8 +1,8 @@
-#include "drake/examples/pr2/main_controller.h"
-
 #include <gtest/gtest.h>
 
 #include "drake/common/find_resource.h"
+#include "drake/examples/pr2/pr2_chassis_controller.h"
+#include "drake/examples/pr2/pr2_upper_body_controller.h"
 #include "drake/examples/pr2/robot_parameters_loader.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/multibody/parsing/parser.h"
@@ -14,12 +14,15 @@ namespace {
 
 constexpr double kMaxTimeStep = 1e-3;
 
-class MainControllerTest : public ::testing::Test {
+class Pr2ControllersTest : public ::testing::Test {
  public:
-  MainControllerTest() {
+  Pr2ControllersTest() {
     LoadPlant();
 
-    LoadRobotParameters();
+    // Load the PR2 parameters.
+    const bool load_successful = ReadParametersFromFile(
+        robot_name_, filepath_prefix_, &robot_parameters_);
+    DRAKE_DEMAND(load_successful);
 
     PopulateTestingStatesValue();
   }
@@ -47,25 +50,17 @@ class MainControllerTest : public ::testing::Test {
     welded_plant_.Finalize();
   }
 
-  void LoadRobotParameters() {
-    const bool load_successful = ReadParametersFromFile(
-        robot_name_, filepath_prefix_, &robot_parameters_);
-    DRAKE_DEMAND(load_successful);
-  }
-
   void PopulateTestingStatesValue() {
     const int num_positions = plant_.num_positions();
     const int num_velocities = plant_.num_velocities();
     const int state_size = num_positions + num_velocities;
 
     estimated_state_ = Eigen::VectorXd::Zero(state_size);
-    estimated_state_[0] = 1;
     desired_state_ = Eigen::VectorXd::Zero(state_size);
-    desired_state_[0] = 1;
 
-    for (int i = 4; i < state_size; ++i) {
-      estimated_state_[i] = i * i;
-      desired_state_[i] = i * i * i;
+    for (int i = 0; i < state_size; ++i) {
+      estimated_state_[i] = 0.1 * i;
+      desired_state_[i] = 0.2 * i;
     }
   }
 
@@ -83,8 +78,9 @@ class MainControllerTest : public ::testing::Test {
   Eigen::VectorXd desired_state_;
 };
 
-TEST_F(MainControllerTest, ConstructionTest) {
-  MainController controller_test(plant(), welded_plant(), robot_parameters());
+TEST_F(Pr2ControllersTest, UpperBodyControllerTest) {
+  Pr2UpperBodyController controller_test(plant(), welded_plant(),
+                                         robot_parameters());
 
   std::unique_ptr<systems::Context<double>> context =
       controller_test.CreateDefaultContext();
@@ -99,9 +95,7 @@ TEST_F(MainControllerTest, ConstructionTest) {
 
   // It's hard to predict the values coming out from the Drake inverse dynamics
   // controller. Here, we check that at least two generalized forces should be
-  // non zero value and the actuation port output should always be zero.
-  // Since the first three elements are always 0 (corresponding to the
-  // floating base), we start from the forth one.
+  // non zero value.
   const double kErrorTol = 0.01;
 
   int non_zero_count = 0;
@@ -111,6 +105,52 @@ TEST_F(MainControllerTest, ConstructionTest) {
     }
   }
   EXPECT_GT(non_zero_count, 1);
+}
+
+// Tests the nominal case that the input ports are connected properly.
+TEST_F(Pr2ControllersTest, ChassisTest) {
+  Pr2ChassisController controller_test(plant(), robot_parameters());
+  std::unique_ptr<drake::systems::Context<double>> context =
+      controller_test.CreateDefaultContext();
+
+  // Sets the input ports.
+  controller_test.get_desired_state_input_port().FixValue(context.get(),
+                                                          desired_state());
+  controller_test.get_estimated_state_input_port().FixValue(context.get(),
+                                                            estimated_state());
+
+  // Checks the output value.
+  const auto& output =
+      controller_test.get_generalized_force_output_port().Eval(*context);
+
+  const auto& part_control_info = controller_test.part_control_info();
+  int i = 0;
+  int saturated_torque = 0;
+  int not_saturated_torque = 0;
+  for (const auto& joint_control_info : part_control_info) {
+    const double pos_error =
+        desired_state()[joint_control_info.position_index] -
+        estimated_state()[joint_control_info.position_index];
+    const double vel_error =
+        desired_state()[joint_control_info.velocity_index] -
+        estimated_state()[joint_control_info.velocity_index];
+    const double torque =
+        joint_control_info.kp * pos_error + joint_control_info.kd * vel_error;
+    // If torque is saturated, the computed torque should reach the
+    // maximum effort limit.
+    if (std::abs(torque) > joint_control_info.effort_limit) {
+      EXPECT_DOUBLE_EQ(std::abs(output[joint_control_info.velocity_index -
+                                       plant().num_positions()]),
+                       joint_control_info.effort_limit);
+      ++saturated_torque;
+    } else {
+      EXPECT_DOUBLE_EQ(
+          output[joint_control_info.velocity_index - plant().num_positions()],
+          torque);
+      ++not_saturated_torque;
+    }
+    ++i;
+  }
 }
 
 }  // namespace

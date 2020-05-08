@@ -228,11 +228,14 @@ void SimWorld<T>::Finalize() {
         *builder.template AddSystem<drake::systems::PassThrough<double>>(
             robot_state_size);
     // Exposes the desired state port.
-    builder.ExportInput(desired_state_passthrough.get_input_port());
+    builder.ExportInput(desired_state_passthrough.get_input_port(),
+                        "robot_desired_state");
 
     auto& estimated_state_passthrough =
         *builder.template AddSystem<drake::systems::PassThrough<double>>(
             robot_state_size);
+    builder.Connect(plant_->get_state_output_port(robot_instance),
+                    estimated_state_passthrough.get_input_port());
 
     // Create the upper body controller and connect the states.
     auto& upper_body_controller =
