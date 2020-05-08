@@ -46,44 +46,19 @@ struct PidGains {
   }
 };
 
-/// Actuator related parameters.
-struct ActuatorParameters {
+/// A struct stores the necessary parameters to control a single joint. One
+/// joint may have multiple actuators. Serialize the members so that the struct
+/// can be loaded from yaml files using the YamlReadArchive.
+struct JointParameters {
   std::string name;
+  std::string actuator_name;
   double effort_limit = 0.0;  ///< [Nm/rad] for revolute joint, [N/m] for
                               ///< linear joint. Absolute value of the
                               ///< torque limit.
   PidGains gains;
 
   bool IsValid() const {
-    return !name.empty() && gains.IsValid() && (effort_limit >= 0);
-  }
-
-  template <typename Archive>
-  void Serialize(Archive* a) {
-    a->Visit(DRAKE_NVP(name));
-    a->Visit(DRAKE_NVP(effort_limit));
-    a->Visit(DRAKE_NVP(gains));
-  }
-};
-
-/// A struct stores the necessary parameters to control a single joint. One
-/// joint may have multiple actuators. Serialize the members so that the struct
-/// can be loaded from yaml files using the YamlReadArchive.
-struct JointParameters {
-  explicit JointParameters(const std::string& joint_name = "")
-      : name(joint_name) {}
-  std::string name;
-  ActuatorParameters actuator_parameters;
-  double position_offset{0.0};       ///< [rad] Offset from the nominal zero
-                                     ///< position.
-  double position_limit_lower{0.0};  ///< [rad]
-  double position_limit_upper{0.0};  ///< [rad]
-  double velocity_limit{0.0};        ///< [rad/s] Absolute value of the
-                                     ///< velocity limit.
-
-  bool IsValid() const {
-    if (!name.empty() && (position_limit_lower <= position_limit_upper) &&
-        actuator_parameters.IsValid()) {
+    if (!name.empty() && gains.IsValid() && (effort_limit >= 0)) {
       return true;
     }
     return false;
@@ -92,11 +67,9 @@ struct JointParameters {
   template <typename Archive>
   void Serialize(Archive* a) {
     a->Visit(DRAKE_NVP(name));
-    a->Visit(DRAKE_NVP(position_offset));
-    a->Visit(DRAKE_NVP(position_limit_lower));
-    a->Visit(DRAKE_NVP(position_limit_upper));
-    a->Visit(DRAKE_NVP(velocity_limit));
-    a->Visit(DRAKE_NVP(actuator_parameters));
+    a->Visit(DRAKE_NVP(actuator_name));
+    a->Visit(DRAKE_NVP(effort_limit));
+    a->Visit(DRAKE_NVP(gains));
   }
 };
 

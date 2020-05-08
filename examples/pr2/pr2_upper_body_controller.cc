@@ -110,9 +110,9 @@ void Pr2UpperBodyController::LoadPidGainsFromRobotParameters(
     for (const auto& joint_parameters : part_parameters.joints_parameters) {
       const int joint_actuator_index =
           welded_robot_plant
-              .GetJointActuatorByName(joint_parameters.actuator_parameters.name)
+              .GetJointActuatorByName(joint_parameters.actuator_name)
               .index();
-      const auto actuator_gains = joint_parameters.actuator_parameters.gains;
+      const auto actuator_gains = joint_parameters.gains;
       (*kp)[joint_actuator_index] = actuator_gains.kp;
       (*kd)[joint_actuator_index] = actuator_gains.kd;
       (*ki)[joint_actuator_index] = actuator_gains.ki;

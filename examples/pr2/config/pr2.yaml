@@ -7,377 +7,237 @@ parts_parameters:
   - name: chassis
     joints_parameters:
       - name: x
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: x_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: x_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: y
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: y_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: y_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: theta
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: theta_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: theta_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: torso
     joints_parameters:
       - name: torso_lift_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: torso_lift_motor
-          effort_limit: 100
-          gains:
-              kp: 200.0
-              ki: 2.0
-              kd: 20.0
+        actuator_name: torso_lift_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: head
     joints_parameters:
       - name: head_pan_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: head_pan_motor
-          effort_limit: 100
-          gains:
-              kp: 200.0
-              ki: 2.0
-              kd: 20.0
+        actuator_name: head_pan_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: head_tilt_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: head_tilt_motor
-          effort_limit: 100
-          gains:
-              kp: 200.0
-              ki: 2.0
-              kd: 20.0
+        actuator_name: head_tilt_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: right_arm
     joints_parameters:
       - name: r_shoulder_pan_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_shoulder_pan_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_shoulder_pan_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_shoulder_lift_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_shoulder_lift_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_shoulder_lift_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_upper_arm_roll_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_upper_arm_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_upper_arm_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_forearm_roll_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_forearm_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_forearm_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_elbow_flex_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_elbow_flex_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_elbow_flex_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_wrist_flex_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_wrist_flex_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_wrist_flex_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_wrist_roll_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_wrist_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_wrist_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: right_gripper
     joints_parameters:
       - name: r_gripper_l_finger_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_gripper_l_finger_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_gripper_l_finger_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_gripper_r_finger_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_gripper_r_finger_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_gripper_r_finger_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_gripper_l_finger_tip_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_gripper_l_finger_tip_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_gripper_l_finger_tip_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: r_gripper_r_finger_tip_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_gripper_r_finger_tip_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_gripper_r_finger_tip_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: left_arm
     joints_parameters:
       - name: l_shoulder_pan_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_shoulder_pan_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_shoulder_pan_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_shoulder_lift_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_shoulder_lift_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_shoulder_lift_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_upper_arm_roll_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_upper_arm_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_upper_arm_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_forearm_roll_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_forearm_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_forearm_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_elbow_flex_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_elbow_flex_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_elbow_flex_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_wrist_flex_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_wrist_flex_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_wrist_flex_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_wrist_roll_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: r_wrist_roll_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: r_wrist_roll_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
   - name: left_gripper
     joints_parameters:
       - name: l_gripper_l_finger_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_gripper_l_finger_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_gripper_l_finger_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_gripper_r_finger_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_gripper_r_finger_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_gripper_r_finger_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_gripper_l_finger_tip_joint
-        position_offset: 0.0
-        position_limit_lower: 0.0
-        position_limit_upper: 0.31
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_gripper_l_finger_tip_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_gripper_l_finger_tip_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0
 
       - name: l_gripper_r_finger_tip_joint
-        position_offset: 0.0
-        position_limit_lower: -0.471238
-        position_limit_upper: 1.39626
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: l_gripper_r_finger_tip_motor
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 20.0
+        actuator_name: l_gripper_r_finger_tip_motor
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 20.0

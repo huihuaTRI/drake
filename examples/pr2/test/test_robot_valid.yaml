@@ -7,42 +7,27 @@ parts_parameters:
   - name: part1
     joints_parameters:
       - name: joint11
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: joint11_actuator
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 40.0
+        actuator_name: joint11_actuator
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 40.0
 
       - name: joint12
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: joint12_actuator
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 40.0
+        actuator_name: joint12_actuator
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 40.0
 
   - name: part2
     joints_parameters:
       - name: joint21
-        position_offset: 0.0
-        position_limit_lower: -10.0
-        position_limit_upper: 10.0
-        velocity_limit: 10.0
-        actuator_parameters:
-          name: joint21_actuator
-          effort_limit: 100
-          gains:
-            kp: 200.0
-            ki: 2.0
-            kd: 40.0
+        actuator_name: joint21_actuator
+        effort_limit: 100
+        gains:
+          kp: 200.0
+          ki: 2.0
+          kd: 40.0

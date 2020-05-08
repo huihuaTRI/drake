@@ -12,7 +12,7 @@ namespace systems = drake::systems;
 std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
     const multibody::MultibodyPlant<double>& robot_plant,
     const RobotParameters& parameters, const std::string& part_name) {
-  // Parses and loads all the joint actuators that belong to the given parts.
+  // Parses and loads all the joint parameters that belong to the given parts.
   std::vector<JointControlInfo> part_joints_pid_info;
   const auto& part_joint_parameters_pair =
       parameters.parts_parameters.find(part_name);
@@ -20,13 +20,12 @@ std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
   //   parameters.parts_parameters.end());
   for (const auto& joint_parameter :
        part_joint_parameters_pair->second.joints_parameters) {
-    const auto& actuator_parameters = joint_parameter.actuator_parameters;
     JointControlInfo joint_pid_info;
     joint_pid_info.joint_name = joint_parameter.name;
-    joint_pid_info.kp = actuator_parameters.gains.kp;
-    joint_pid_info.kd = actuator_parameters.gains.kd;
-    joint_pid_info.ki = actuator_parameters.gains.ki;
-    joint_pid_info.effort_limit = actuator_parameters.effort_limit;
+    joint_pid_info.kp = joint_parameter.gains.kp;
+    joint_pid_info.kd = joint_parameter.gains.kd;
+    joint_pid_info.ki = joint_parameter.gains.ki;
+    joint_pid_info.effort_limit = joint_parameter.effort_limit;
     joint_pid_info.position_index =
         robot_plant.GetJointByName(joint_pid_info.joint_name).position_start();
     joint_pid_info.velocity_index =

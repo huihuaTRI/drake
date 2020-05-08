@@ -15,9 +15,6 @@ namespace {
 // easy access purpose.
 constexpr int kNumTestRobotPart1Joints = 2;
 constexpr int kNumTestRobotJoints = 3;
-constexpr double kPositionLimitLower = -10.0;
-constexpr double kPositionLimitUpper = 10.0;
-constexpr double kVelocityLimit = 10.0;
 constexpr double kPidGainKd = 40.0;
 
 const char* kFilepathPrefix = "drake/examples/pr2/test/";
@@ -45,10 +42,7 @@ GTEST_TEST(RobotParametersLoaderTest, LoadingTest) {
     }
     num_test_robot_joints += num_part_joints;
     for (const auto& joint_parameters : part_parameters.joints_parameters) {
-      EXPECT_EQ(joint_parameters.position_limit_lower, kPositionLimitLower);
-      EXPECT_EQ(joint_parameters.position_limit_upper, kPositionLimitUpper);
-      EXPECT_EQ(joint_parameters.velocity_limit, kVelocityLimit);
-      EXPECT_EQ(joint_parameters.actuator_parameters.gains.kd, kPidGainKd);
+      EXPECT_EQ(joint_parameters.gains.kd, kPidGainKd);
     }
   }
   EXPECT_EQ(num_test_robot_joints, kNumTestRobotJoints);
