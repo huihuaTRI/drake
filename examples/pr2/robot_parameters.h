@@ -73,7 +73,7 @@ struct JointParameters {
   explicit JointParameters(const std::string& joint_name = "")
       : name(joint_name) {}
   std::string name;
-  std::vector<ActuatorParameters> actuators_parameters;
+  ActuatorParameters actuator_parameters;
   double position_offset{0.0};       ///< [rad] Offset from the nominal zero
                                      ///< position.
   double position_limit_lower{0.0};  ///< [rad]
@@ -82,27 +82,11 @@ struct JointParameters {
                                      ///< velocity limit.
 
   bool IsValid() const {
-    if (name.empty() || (position_limit_lower > position_limit_upper) ||
-        actuators_parameters.empty()) {
-      return false;
+    if (!name.empty() && (position_limit_lower <= position_limit_upper) &&
+        actuator_parameters.IsValid()) {
+      return true;
     }
-    // This map will be used to confirm there are no duplicate actuators
-    // (w.r.t actuator name) on the same joint.
-    std::map<std::string, bool> unique_actuator_names_per_joint_map;
-    for (const auto& actuator_parameter : actuators_parameters) {
-      if (!actuator_parameter.IsValid()) {
-        return false;
-      }
-      // Return error if duplicate actuator names are found per joint.
-      if (unique_actuator_names_per_joint_map.find(actuator_parameter.name) ==
-          unique_actuator_names_per_joint_map.end()) {
-        unique_actuator_names_per_joint_map.insert(
-            {actuator_parameter.name, true});
-      } else {
-        return false;
-      }
-    }
-    return true;
+    return false;
   }
 
   template <typename Archive>
@@ -112,7 +96,7 @@ struct JointParameters {
     a->Visit(DRAKE_NVP(position_limit_lower));
     a->Visit(DRAKE_NVP(position_limit_upper));
     a->Visit(DRAKE_NVP(velocity_limit));
-    a->Visit(DRAKE_NVP(actuators_parameters));
+    a->Visit(DRAKE_NVP(actuator_parameters));
   }
 };
 

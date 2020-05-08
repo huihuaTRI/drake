@@ -1,4 +1,4 @@
-#include "drake/examples/pr2/chassis_controller.h"
+#include "drake/examples/pr2/pr2_chassis_controller.h"
 
 #include "drake/common/drake_assert.h"
 #include "drake/math/saturate.h"
@@ -14,13 +14,15 @@ std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
     const RobotParameters& parameters, const std::string& part_name) {
   // Parses and loads all the joint actuators that belong to the given parts.
   std::vector<JointControlInfo> part_joints_pid_info;
-  const auto part_joint_parameters_pair =
+  const auto& part_joint_parameters_pair =
       parameters.parts_parameters.find(part_name);
-  DRAKE_DEMAND(part_joint_parameters_pair != part_joint_parameters_map.end());
-  for (const auto& joint_parameter : part_joint_parameters_pair->second) {
+  //   DRAKE_DEMAND(part_joint_parameters_pair !=
+  //   parameters.parts_parameters.end());
+  for (const auto& joint_parameter :
+       part_joint_parameters_pair->second.joints_parameters) {
     const auto& actuator_parameters = joint_parameter.actuator_parameters;
     JointControlInfo joint_pid_info;
-    joint_pid_info.joint_name = joint_parameter.joint_name;
+    joint_pid_info.joint_name = joint_parameter.name;
     joint_pid_info.kp = actuator_parameters.gains.kp;
     joint_pid_info.kd = actuator_parameters.gains.kd;
     joint_pid_info.ki = actuator_parameters.gains.ki;
@@ -30,13 +32,13 @@ std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
     joint_pid_info.velocity_index =
         robot_plant.num_positions() +
         robot_plant.GetJointByName(joint_pid_info.joint_name).velocity_start();
-    part_joints_pid_info_.push_back(joint_pid_info);
+    part_joints_pid_info.push_back(joint_pid_info);
   }
 
   return part_joints_pid_info;
 }
 
-ChassisPidController::ChassisPidController(
+Pr2ChassisController::Pr2ChassisController(
     const multibody::MultibodyPlant<double>& robot_plant,
     const RobotParameters& parameters)
     : num_positions_(robot_plant.num_positions()),
@@ -53,13 +55,13 @@ ChassisPidController::ChassisPidController(
 
   output_port_generalized_force_ = &this->DeclareVectorOutputPort(
       "generalized_force", systems::BasicVector<double>(num_velocities_),
-      &ChassisPidController::CalcOutput);
+      &Pr2ChassisController::CalcOutput);
 
-  parts_control_info_ = ParsePartJointControlInfoFromParameters(
+  part_control_info_ = ParsePartJointControlInfoFromParameters(
       robot_plant, parameters, kPartName);
 }
 
-void ChassisPidController::CalcOutput(
+void Pr2ChassisController::CalcOutput(
     const drake::systems::Context<double>& context,
     drake::systems::BasicVector<double>* output) const {
   output->SetZero();
@@ -76,19 +78,17 @@ void ChassisPidController::CalcOutput(
         this->get_desired_state_input_port().Eval(context);
 
     // Apply PD controller to the interested joints.
-    for (const auto& part_control_info : parts_control_info_) {
-      for (const auto& joint_control_info : part_control_info) {
-        const int position_index = joint_control_info.position_index;
-        const int velocity_index = joint_control_info.velocity_index;
-        const double raw_torque =
-            joint_control_info.kp * (desired_state[position_index] -
-                                     estimated_state[position_index]) +
-            joint_control_info.kd * (desired_state[velocity_index] -
-                                     estimated_state[velocity_index]);
-        (*output)[velocity_index - this->num_positions()] =
-            drake::math::saturate(raw_torque, -joint_control_info.effort_limit,
-                                  joint_control_info.effort_limit);
-      }
+    for (const auto& joint_control_info : part_control_info_) {
+      const int position_index = joint_control_info.position_index;
+      const int velocity_index = joint_control_info.velocity_index;
+      const double raw_torque =
+          joint_control_info.kp * (desired_state[position_index] -
+                                   estimated_state[position_index]) +
+          joint_control_info.kd *
+              (desired_state[velocity_index] - estimated_state[velocity_index]);
+      (*output)[velocity_index - num_positions_] =
+          drake::math::saturate(raw_torque, -joint_control_info.effort_limit,
+                                joint_control_info.effort_limit);
     }
   }
 }

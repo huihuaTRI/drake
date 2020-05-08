@@ -29,9 +29,9 @@ drake_cc_library(
 )
 
 drake_cc_library(
-    name = "inverse_dynamics_controller",
-    srcs = ["inverse_dynamics_controller.cc"],
-    hdrs = ["inverse_dynamics_controller.h"],
+    name = "pr2_chassis_controller",
+    srcs = ["pr2_chassis_controller.cc"],
+    hdrs = ["pr2_chassis_controller.h"],
     deps = [
         ":parameters",
         "//common:essential",
@@ -42,12 +42,15 @@ drake_cc_library(
 )
 
 drake_cc_library(
-    name = "main_controller",
-    srcs = ["main_controller.cc"],
-    hdrs = ["main_controller.h"],
+    name = "pr2_upper_body_controller",
+    srcs = ["pr2_upper_body_controller.cc"],
+    hdrs = ["pr2_upper_body_controller.h"],
     deps = [
-        ":inverse_dynamics_controller",
-        "//systems/framework",
+        ":parameters",
+        "//common:essential",
+        "//multibody/plant",
+        "//systems/controllers",
+        "//systems/primitives:matrix_gain",
     ],
 )
 

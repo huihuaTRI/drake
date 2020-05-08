@@ -25,7 +25,7 @@ namespace pr2 {
 /// plant. The third argument is the parameters that specify the PID gains for
 /// the controller.
 ///
-/// @system{ InverseDynamicsController,
+/// @system{ Pr2UpperBodyController,
 ///   @input_port{input_port_index_estimated_state_}  Estimated state of the
 ///          floating base robot model.
 ///   @input_port{input_port_index_desired_state_}  Desired state of the
@@ -35,12 +35,12 @@ namespace pr2 {
 ///          includes the generalized torque for the upper body
 /// }
 
-class InverseDynamicsController final : public systems::Diagram<double> {
+class Pr2UpperBodyController final : public systems::Diagram<double> {
  public:
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(InverseDynamicsController)
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Pr2UpperBodyController)
   /// @p welded_robot_plant is aliased and must remain valid for the lifetime
   /// of the controller.
-  InverseDynamicsController(
+  Pr2UpperBodyController(
       const multibody::MultibodyPlant<double>& robot_plant,
       const multibody::MultibodyPlant<double>& welded_robot_plant,
       const RobotParameters& parameters);

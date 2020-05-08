@@ -1,4 +1,4 @@
-#include "drake/examples/pr2/inverse_dynamics_controller.h"
+#include "drake/examples/pr2/pr2_upper_body_controller.h"
 
 #include "drake/systems/controllers/inverse_dynamics_controller.h"
 #include "drake/systems/primitives/matrix_gain.h"
@@ -7,7 +7,7 @@ namespace drake {
 namespace examples {
 namespace pr2 {
 
-InverseDynamicsController::InverseDynamicsController(
+Pr2UpperBodyController::Pr2UpperBodyController(
     const multibody::MultibodyPlant<double>& robot_plant,
     const multibody::MultibodyPlant<double>& welded_robot_plant,
     const RobotParameters& parameters) {
@@ -95,7 +95,7 @@ InverseDynamicsController::InverseDynamicsController(
   builder.BuildInto(this);
 }
 
-void InverseDynamicsController::LoadPidGainsFromRobotParameters(
+void Pr2UpperBodyController::LoadPidGainsFromRobotParameters(
     const RobotParameters& parameters,
     const multibody::MultibodyPlant<double>& welded_robot_plant,
     VectorX<double>* kp, VectorX<double>* ki, VectorX<double>* kd) {
@@ -112,9 +112,7 @@ void InverseDynamicsController::LoadPidGainsFromRobotParameters(
           welded_robot_plant
               .GetJointActuatorByName(joint_parameters.name + "_actuator")
               .index();
-      DRAKE_DEMAND(joint_parameters.actuators_parameters.size() == 1);
-      const auto actuator_gains =
-          joint_parameters.actuators_parameters[0].gains;
+      const auto actuator_gains = joint_parameters.actuator_parameters.gains;
       (*kp)[joint_actuator_index] = actuator_gains.kp;
       (*kd)[joint_actuator_index] = actuator_gains.kd;
       (*ki)[joint_actuator_index] = actuator_gains.ki;
