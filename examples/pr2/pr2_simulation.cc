@@ -16,6 +16,9 @@ namespace {
 DEFINE_double(simulation_time, 20.0,
               "Desired duration of the simulation in seconds");
 
+DEFINE_double(time_step, 1.0e-3,
+              "Simulation time step used for the discrete systems.");
+
 DEFINE_double(target_realtime_rate, 1.0,
               "Desired rate relative to real time.  See documentation for "
               "Simulator::set_target_realtime_rate() for details.");
@@ -23,7 +26,9 @@ DEFINE_double(target_realtime_rate, 1.0,
 int DoMain() {
   // Build a generic multibody plant.
   systems::DiagramBuilder<double> builder;
-  auto sim_world = builder.AddSystem<SimWorld<double>>("pr2");
+  const std::string kRobotName = "pr2";
+  auto sim_world =
+      builder.AddSystem<SimWorld<double>>(kRobotName, FLAGS_time_step);
 
   geometry::ConnectDrakeVisualizer(&builder,
                                    sim_world->get_mutable_scene_graph(),
@@ -44,7 +49,7 @@ int DoMain() {
           constant_pos_value);
   desired_pos_constant_source->set_name("desired_pos_constant_source");
   builder.Connect(desired_pos_constant_source->get_output_port(),
-                  sim_world->GetInputPort("robot_desired_state"));
+                  sim_world->GetInputPort(kRobotName + "_desired_state"));
 
   auto diagram = builder.Build();
 

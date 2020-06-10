@@ -1,10 +1,8 @@
-#include "drake/examples/pr2/robot_parameters_loader.h"
+#include "drake/examples/pr2/robot_parameters.h"
 
 #include <string>
 
 #include <gtest/gtest.h>
-
-#include "drake/examples/pr2/robot_parameters.h"
 
 namespace drake {
 namespace examples {

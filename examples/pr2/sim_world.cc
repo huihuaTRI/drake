@@ -6,9 +6,9 @@
 #include <gflags/gflags.h>
 
 #include "drake/common/find_resource.h"
-#include "drake/examples/pr2/pr2_chassis_controller.h"
+#include "drake/examples/pr2/pr2_pd_controller.h"
 #include "drake/examples/pr2/pr2_upper_body_controller.h"
-#include "drake/examples/pr2/robot_parameters_loader.h"
+#include "drake/examples/pr2/robot_parameters.h"
 #include "drake/geometry/render/render_engine_vtk_factory.h"
 #include "drake/multibody/benchmarks/inclined_plane/inclined_plane_plant.h"
 #include "drake/multibody/parsing/parser.h"
@@ -21,9 +21,6 @@
 namespace drake {
 namespace examples {
 namespace pr2 {
-
-DEFINE_double(time_step, 1.0e-3,
-              "Simulation time step used for the discrete systems.");
 
 using drake::geometry::SceneGraph;
 using drake::geometry::render::MakeRenderEngineVtk;
@@ -38,21 +35,24 @@ using drake::systems::Context;
 using drake::systems::Diagram;
 using drake::systems::State;
 
+namespace {
 constexpr double kGravity = 9.8;
 constexpr double kPenetrationAllowance = 0.6;
 constexpr double kVStictionTolerance = 0.6;
 constexpr double kInclinedPlaneStaticFrictionCoef = 0.6;
 constexpr double kInclinedPlaneKineticFrictionCoef = 0.6;
+}  // namespace
 
 template <typename T>
-SimWorld<T>::SimWorld(const std::string& robot_name)
+SimWorld<T>::SimWorld(const std::string& robot_name, double time_step)
     : robot_name_(robot_name),
-      owned_plant_(std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)),
+      owned_plant_(std::make_unique<MultibodyPlant<T>>(time_step)),
       owned_scene_graph_(std::make_unique<SceneGraph<T>>()),
-      owned_robot_plant_(std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)),
+      owned_robot_plant_(std::make_unique<MultibodyPlant<T>>(time_step)),
       owned_welded_robot_plant_(
-          std::make_unique<MultibodyPlant<T>>(FLAGS_time_step)) {
+          std::make_unique<MultibodyPlant<T>>(time_step)) {
   DRAKE_DEMAND(!robot_name.empty());
+  DRAKE_DEMAND(time_step > 0);
   // This class holds the unique_ptrs explicitly for plant and scene_graph
   // until Finalize() is called (when they are moved into the Diagram). Grab
   // the raw pointers, which should stay valid for the lifetime of the Diagram.
@@ -70,28 +70,8 @@ SimWorld<T>::SimWorld(const std::string& robot_name)
 
   Finalize();
 
+  // Set the diagram name.
   this->set_name("sim_world");
-}
-
-// Add default pr2.
-template <typename T>
-void SimWorld<T>::AddRobotModel(const std::string& robot_name) {
-  const std::string filepath_prefix = "drake/examples/pr2/config/";
-  DRAKE_DEMAND(
-      ReadParametersFromFile(robot_name, filepath_prefix, &robot_parameters_));
-  DRAKE_DEMAND(robot_parameters_.name == robot_name);
-
-  const std::string model_path =
-      FindResourceOrThrow(robot_parameters_.model_instance_info.model_path);
-  Parser parser(plant_);
-  const multibody::ModelInstanceIndex model_instance_index =
-      parser.AddModelFromFile(model_path, robot_name);
-
-  // Filling the rest of the model instance information.
-  robot_parameters_.model_instance_info.model_path = model_path;
-  robot_parameters_.model_instance_info.index = model_instance_index;
-  robot_parameters_.model_instance_info.X_PC =
-      RigidTransform<double>::Identity();
 }
 
 template <typename T>
@@ -105,7 +85,24 @@ void SimWorld<T>::LoadModelsAndSetSimWorld() {
   }
 
   // Add a robot model.
-  AddRobotModel(robot_name_);
+  {
+    const std::string filepath_prefix = "drake/examples/pr2/config/";
+    DRAKE_DEMAND(ReadParametersFromFile(robot_name_, filepath_prefix,
+                                        &robot_parameters_));
+    DRAKE_DEMAND(robot_parameters_.name == robot_name_);
+
+    const std::string model_path =
+        FindResourceOrThrow(robot_parameters_.model_instance_info.model_path);
+    Parser parser(plant_);
+    const multibody::ModelInstanceIndex model_instance_index =
+        parser.AddModelFromFile(model_path, robot_name_);
+
+    // Filling the rest of the model instance information.
+    robot_parameters_.model_instance_info.model_path = model_path;
+    robot_parameters_.model_instance_info.index = model_instance_index;
+    robot_parameters_.model_instance_info.X_PC =
+        RigidTransform<double>::Identity();
+  }
 
   // Other environmental models can be added here.
 }
@@ -206,21 +203,10 @@ void SimWorld<T>::Finalize() {
   const int robot_state_size = num_robot_positions + num_robot_velocities;
 
   // Export Robot "state" outputs.
-  {
-    auto demux = builder.template AddSystem<systems::Demultiplexer>(
-        std::vector<int>{num_robot_positions, num_robot_velocities});
-    builder.Connect(plant_->get_state_output_port(robot_instance),
-                    demux->get_input_port(0));
-    builder.ExportOutput(demux->get_output_port(0),
-                         robot_name_ + "_position_measured");
-    builder.ExportOutput(demux->get_output_port(1),
-                         robot_name_ + "_velocity_estimated");
-    builder.ExportOutput(plant_->get_state_output_port(robot_instance),
-                         robot_name_ + "_state_estimated");
-  }
+  builder.ExportOutput(plant_->get_state_output_port(robot_instance),
+                       robot_name_ + "_estimated_state");
 
-  // Connect the states with controllers. A constant zero control source is
-  // connected for now.
+  // Connect the states with controllers.
   {
     // Creates desired state and estimated state passthroughs to connect to
     // different controllers.
@@ -229,7 +215,7 @@ void SimWorld<T>::Finalize() {
             robot_state_size);
     // Exposes the desired state port.
     builder.ExportInput(desired_state_passthrough.get_input_port(),
-                        "robot_desired_state");
+                        robot_name_ + "_desired_state");
 
     auto& estimated_state_passthrough =
         *builder.template AddSystem<drake::systems::PassThrough<double>>(
@@ -247,13 +233,17 @@ void SimWorld<T>::Finalize() {
                     upper_body_controller.get_estimated_state_input_port());
 
     // Create the chassis controller and connect the states.
-    auto& chassis_controller =
-        *builder.template AddSystem<Pr2ChassisController>(*owned_robot_plant_,
-                                                          robot_parameters_);
+    const std::string kChassisPartName = "chassis";
+    const auto chassis_parameters =
+        robot_parameters_.parts_parameters.find(kChassisPartName);
+    DRAKE_DEMAND(chassis_parameters !=
+                 robot_parameters_.parts_parameters.end());
+    auto& chassis_pd_controller = *builder.template AddSystem<Pr2PdController>(
+        *owned_robot_plant_, chassis_parameters->second);
     builder.Connect(desired_state_passthrough.get_output_port(),
-                    chassis_controller.get_desired_state_input_port());
+                    chassis_pd_controller.get_desired_state_input_port());
     builder.Connect(estimated_state_passthrough.get_output_port(),
-                    chassis_controller.get_estimated_state_input_port());
+                    chassis_pd_controller.get_estimated_state_input_port());
 
     // Create two selector matrix to pick the corresponding generalized forces
     // for each of the controller.
@@ -270,7 +260,7 @@ void SimWorld<T>::Finalize() {
         Eigen::MatrixXd::Zero(num_robot_velocities, num_robot_velocities);
     // Update the selector matrix.
     for (const auto& joint_control_info :
-         chassis_controller.part_control_info()) {
+         chassis_pd_controller.part_control_info()) {
       const int joint_velocity_index = joint_control_info.velocity_index -
                                        owned_robot_plant_->num_positions();
       chassis_selector(joint_velocity_index, joint_velocity_index) = 1;
@@ -281,7 +271,7 @@ void SimWorld<T>::Finalize() {
     auto& chassis_control_selector_system =
         *builder.template AddSystem<drake::systems::MatrixGain<double>>(
             chassis_selector);
-    builder.Connect(chassis_controller.get_generalized_force_output_port(),
+    builder.Connect(chassis_pd_controller.get_generalized_force_output_port(),
                     chassis_control_selector_system.get_input_port());
 
     // Create the selector system of the upper body controller.
@@ -292,8 +282,9 @@ void SimWorld<T>::Finalize() {
                     upper_body_control_selector_system.get_input_port());
 
     // Create an adder to add these two controllers together.
+    const int kNumControllers = 2;
     auto& adder = *builder.template AddSystem<drake::systems::Adder<double>>(
-        2, num_robot_velocities);
+        kNumControllers, num_robot_velocities);
     builder.Connect(chassis_control_selector_system.get_output_port(),
                     adder.get_input_port(0));
     builder.Connect(upper_body_control_selector_system.get_output_port(),

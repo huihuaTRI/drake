@@ -12,7 +12,8 @@ namespace {
 
 GTEST_TEST(SimWorldTest, ConstructionTest) {
   const std::string kRobotName = "pr2";
-  SimWorld<double> sim_world(kRobotName);
+  const double kTimeStep = 1e-3;
+  SimWorld<double> sim_world(kRobotName, kTimeStep);
 
   const auto& robot_plant = sim_world.get_robot_plant();
 

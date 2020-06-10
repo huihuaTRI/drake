@@ -1,6 +1,7 @@
 // Copyright 2019 Toyota Research Institute. All rights reserved.
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "drake/common/drake_assert.h"
@@ -28,14 +29,12 @@ struct JointControlInfo {
   int velocity_index{0};
 };
 
-class Pr2ChassisController final : public systems::LeafSystem<double> {
+class Pr2PdController final : public systems::LeafSystem<double> {
  public:
-  static constexpr const char* kPartName = "chassis";
+  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Pr2PdController)
 
-  DRAKE_NO_COPY_NO_MOVE_NO_ASSIGN(Pr2ChassisController)
-
-  Pr2ChassisController(const multibody::MultibodyPlant<double>& robot_plant,
-                       const RobotParameters& parameters);
+  Pr2PdController(const multibody::MultibodyPlant<double>& robot_plant,
+                  const PartParameters& part_parameters);
 
   /// @name Named accessors for this System's input and output ports.
   //@{

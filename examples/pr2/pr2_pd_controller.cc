@@ -1,4 +1,4 @@
-#include "drake/examples/pr2/pr2_chassis_controller.h"
+#include "drake/examples/pr2/pr2_pd_controller.h"
 
 #include "drake/common/drake_assert.h"
 #include "drake/math/saturate.h"
@@ -11,15 +11,10 @@ namespace systems = drake::systems;
 
 std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
     const multibody::MultibodyPlant<double>& robot_plant,
-    const RobotParameters& parameters, const std::string& part_name) {
+    const PartParameters& part_parameters) {
   // Parses and loads all the joint parameters that belong to the given parts.
   std::vector<JointControlInfo> part_joints_pid_info;
-  const auto& part_joint_parameters_pair =
-      parameters.parts_parameters.find(part_name);
-  //   DRAKE_DEMAND(part_joint_parameters_pair !=
-  //   parameters.parts_parameters.end());
-  for (const auto& joint_parameter :
-       part_joint_parameters_pair->second.joints_parameters) {
+  for (const auto& joint_parameter : part_parameters.joints_parameters) {
     JointControlInfo joint_pid_info;
     joint_pid_info.joint_name = joint_parameter.name;
     joint_pid_info.kp = joint_parameter.gains.kp;
@@ -37,9 +32,9 @@ std::vector<JointControlInfo> ParsePartJointControlInfoFromParameters(
   return part_joints_pid_info;
 }
 
-Pr2ChassisController::Pr2ChassisController(
+Pr2PdController::Pr2PdController(
     const multibody::MultibodyPlant<double>& robot_plant,
-    const RobotParameters& parameters)
+    const PartParameters& part_parameters)
     : num_positions_(robot_plant.num_positions()),
       num_velocities_(robot_plant.num_velocities()) {
   DRAKE_DEMAND(num_positions_ > 0);
@@ -54,13 +49,13 @@ Pr2ChassisController::Pr2ChassisController(
 
   output_port_generalized_force_ = &this->DeclareVectorOutputPort(
       "generalized_force", systems::BasicVector<double>(num_velocities_),
-      &Pr2ChassisController::CalcOutput);
+      &Pr2PdController::CalcOutput);
 
-  part_control_info_ = ParsePartJointControlInfoFromParameters(
-      robot_plant, parameters, kPartName);
+  part_control_info_ =
+      ParsePartJointControlInfoFromParameters(robot_plant, part_parameters);
 }
 
-void Pr2ChassisController::CalcOutput(
+void Pr2PdController::CalcOutput(
     const drake::systems::Context<double>& context,
     drake::systems::BasicVector<double>* output) const {
   output->SetZero();

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "drake/common/find_resource.h"
-#include "drake/examples/pr2/pr2_chassis_controller.h"
+#include "drake/examples/pr2/pr2_pd_controller.h"
 #include "drake/examples/pr2/pr2_upper_body_controller.h"
-#include "drake/examples/pr2/robot_parameters_loader.h"
+#include "drake/examples/pr2/robot_parameters.h"
 #include "drake/math/rigid_transform.h"
 #include "drake/multibody/parsing/parser.h"
 
@@ -108,8 +108,12 @@ TEST_F(Pr2ControllersTest, UpperBodyControllerTest) {
 }
 
 // Tests the nominal case that the input ports are connected properly.
-TEST_F(Pr2ControllersTest, ChassisTest) {
-  Pr2ChassisController controller_test(plant(), robot_parameters());
+TEST_F(Pr2ControllersTest, PdControllerTest) {
+  const std::string kTestPartName = "chassis";
+  const auto chassis_parameters =
+      robot_parameters().parts_parameters.find(kTestPartName);
+  DRAKE_DEMAND(chassis_parameters != robot_parameters().parts_parameters.end());
+  Pr2PdController controller_test(plant(), chassis_parameters->second);
   std::unique_ptr<drake::systems::Context<double>> context =
       controller_test.CreateDefaultContext();
 

@@ -14,11 +14,10 @@ package(default_visibility = ["//visibility:public"])
 drake_cc_library(
     name = "parameters",
     srcs = [
-        "robot_parameters_loader.cc",
+        "robot_parameters.cc",
     ],
     hdrs = [
         "robot_parameters.h",
-        "robot_parameters_loader.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -30,9 +29,9 @@ drake_cc_library(
 )
 
 drake_cc_library(
-    name = "pr2_chassis_controller",
-    srcs = ["pr2_chassis_controller.cc"],
-    hdrs = ["pr2_chassis_controller.h"],
+    name = "pr2_pd_controller",
+    srcs = ["pr2_pd_controller.cc"],
+    hdrs = ["pr2_pd_controller.h"],
     deps = [
         ":parameters",
         "//common:essential",
@@ -70,7 +69,7 @@ drake_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":parameters",
-        ":pr2_chassis_controller",
+        ":pr2_pd_controller",
         ":pr2_upper_body_controller",
         "//common:find_resource",
         "//geometry:scene_graph",
@@ -104,7 +103,7 @@ drake_cc_binary(
 # === test/ ===
 
 drake_cc_googletest(
-    name = "robot_parameters_loader_test",
+    name = "robot_parameters_test",
     data = [
         "test/test_robot_invalid.yaml",
         "test/test_robot_valid.yaml",
@@ -121,7 +120,7 @@ drake_cc_googletest(
         ":models",
     ],
     deps = [
-        ":pr2_chassis_controller",
+        ":pr2_pd_controller",
         ":pr2_upper_body_controller",
         "//multibody/parsing",
         "//multibody/plant",

@@ -1,4 +1,4 @@
-#include "drake/examples/pr2/robot_parameters_loader.h"
+#include "drake/examples/pr2/robot_parameters.h"
 
 #include "drake/common/find_resource.h"
 #include "drake/common/yaml/yaml_read_archive.h"
@@ -43,7 +43,7 @@ bool ReadParametersFromFile(const std::string& filename,
     }
   }
 
-  // Final check the complete parameters are valid.
+  // Final check the loaded parameters are valid.
   if (parameters->IsValid()) {
     return true;
   } else {

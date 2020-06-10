@@ -13,7 +13,7 @@ namespace drake {
 namespace examples {
 namespace pr2 {
 
-/// Contains the necessary information about a loaded model instance.
+/// A simple struct to contain informations about a loaded model instance.
 /// This information will be useful if extra care is needed for this instance.
 /// For example, the X_PC will be used to set the initial position if this
 /// instance has a floating base.
@@ -29,8 +29,6 @@ struct ModelInstanceInfo {
 
 /// A simple struct to store PID gains for one joint. Serialize the members so
 /// that the struct can be loaded from yaml files using the YamlReadArchive.
-/// Details can be referred to
-/// "examples/pr2/parameters/robot_parameters_loader.h".
 struct PidGains {
   double kp{0.0};
   double ki{0.0};
@@ -114,7 +112,7 @@ struct PartParameters {
 /// Parameters of a robot that includes different parts and the sensors.
 struct RobotParameters {
   std::string name;
-  pr2::ModelInstanceInfo model_instance_info;
+  ModelInstanceInfo model_instance_info;
   std::map<std::string, PartParameters> parts_parameters;
 
   bool IsValid() const {
@@ -153,6 +151,11 @@ struct RobotParameters {
     return true;
   }
 };
+
+/// Loads the `RobotParameters` from a yaml configuration file.
+bool ReadParametersFromFile(const std::string& filename,
+                            const std::string& filepath_prefix,
+                            RobotParameters* parameters = nullptr);
 
 }  // namespace pr2
 }  // namespace examples
