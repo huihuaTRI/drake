@@ -107,6 +107,34 @@ std::string RemoveFileExtension(const std::string& filepath) {
   return filepath.substr(0, last_dot);
 }
 
+constexpr char kRgbaDistortionVertexShaderReplacement[] = R"__(
+  // distort the real world vertices using the rational model
+  vec4 distort(vec4 view_pos)
+  {
+    // normalize
+    float alpha = 0.55;
+    float xi = -0.20;
+    float x1 = view_pos[0];
+    float y1 = view_pos[1];
+    float z1 = view_pos[2];
+    // precalculations
+    float x1_2 = x1*x1;
+    float y1_2 = y1*y1;
+    float z1_2 = z1*z1;
+    float dist1 = sqrt(x1_2 + y1_2 + z1_2);
+    float z1_distort = xi*dist1 + z1;
+    float z1_distrot_2 = z1_distort * z1_distort;
+    float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
+    // rational distortion factor
+    float denom = alpha*dist2 + (1-alpha)*z1_distort;
+    float factor = z1/denom;
+    return vec4(x1*factor, y1*factor, z1, view_pos[3]);
+  }
+  vec4 vertexVC = MCVCMatrix * vertexMC;
+  vec4 dist_pos = distort(vertexVC);
+  gl_Position = MCDCMatrix * dist_pos;
+)__";
+
 }  // namespace
 
 namespace internal {
