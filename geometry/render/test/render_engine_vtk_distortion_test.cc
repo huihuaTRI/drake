@@ -53,8 +53,8 @@ using systems::sensors::ImageRgba8U;
 using systems::sensors::InvalidDepth;
 
 // Default camera properties.
-const int kWidth = 640;
-const int kHeight = 480;
+const int kWidth = 2560;
+const int kHeight = 2048;
 const double kZNear = 0.5;
 const double kZFar = 5.;
 const double kFovY = M_PI_4;
@@ -91,7 +91,7 @@ const ColorI kTextureColor{4, 241, 33};
 // Provide a default visual color for these tests -- it is intended to be
 // different from the default color of the VTK render engine.
 const ColorI kDefaultVisualColor = {229u, 229u, 229u};
-const float kDefaultDistance{3.f};
+const float kDefaultDistance{5.f};
 
 const RenderLabel kDefaultLabel{13531};
 
@@ -106,11 +106,6 @@ struct ScreenCoord {
   int x{};
   int y{};
 };
-
-std::ostream& operator<<(std::ostream& out, const ScreenCoord& c) {
-  out << "(" << c.x << ", " << c.y << ")";
-  return out;
-}
 
 // Utility struct for doing color testing; provides three mechanisms for
 // creating a common rgba color. We get colors from images (as a pointer to
@@ -130,37 +125,6 @@ struct RgbaColor {
   int b;
   int a;
 };
-
-std::ostream& operator<<(std::ostream& out, const RgbaColor& c) {
-  out << "(" << c.r << ", " << c.g << ", " << c.b << ", " << c.a << ")";
-  return out;
-}
-
-// Tests color within tolerance.
-bool IsColorNear(
-    const RgbaColor& expected, const RgbaColor& tested,
-    double tolerance = kColorPixelTolerance) {
-  using std::abs;
-  return (abs(expected.r - tested.r) < tolerance &&
-      abs(expected.g - tested.g) < tolerance &&
-      abs(expected.b - tested.b) < tolerance &&
-      abs(expected.a - tested.a) < tolerance);
-}
-
-// Tests that the color in the given `image` located at screen coordinate `p`
-// matches the `expected` color to within the given `tolerance`.
-::testing::AssertionResult CompareColor(
-    const RgbaColor& expected, const ImageRgba8U& image, const ScreenCoord& p,
-    double tolerance = kColorPixelTolerance) {
-  RgbaColor tested(image.at(p.x, p.y));
-  if (IsColorNear(expected, tested, tolerance)) {
-    return ::testing::AssertionSuccess();
-  }
-  return ::testing::AssertionFailure() << "Expected: " << expected
-                                       << " at " << p
-                                       << ", tested: " << tested
-                                       << " with tolerance: " << tolerance;
-}
 
 // This test suite facilitates a test with a ground plane and floating shape.
 // The camera is positioned above the shape looking straight down. All
@@ -187,7 +151,7 @@ class RenderEngineVtkTest : public ::testing::Test {
         // Looking straight down from kDefaultDistance meters above the ground.
         X_WC_(RotationMatrixd{AngleAxisd(M_PI, Vector3d::UnitY()) *
                               AngleAxisd(-M_PI_2, Vector3d::UnitZ())},
-              {0, 0, kDefaultDistance}),
+              {-0.2, 0.0, kDefaultDistance}),
         geometry_id_(GeometryId::get_new_id()) {}
 
  protected:
@@ -210,120 +174,6 @@ class RenderEngineVtkTest : public ::testing::Test {
     renderer->RenderLabelImage(camera, false, label);
   }
 
-  // Confirms that all pixels in the member color image have the same value.
-  void VerifyUniformColor(const ColorI& pixel, int alpha,
-                          const ImageRgba8U* color = nullptr) {
-    if (color == nullptr) color = &color_;
-    const RgbaColor test_color{pixel, alpha};
-    for (int y = 0; y < color->height(); ++y) {
-      for (int x = 0; x < color->width(); ++x) {
-        ASSERT_TRUE(CompareColor(test_color, *color, ScreenCoord{x, y}));
-      }
-    }
-  }
-
-  // Confirms that all pixels in the member label image have the same value.
-  void VerifyUniformLabel(int16_t value, const ImageLabel16I* label = nullptr) {
-    if (label == nullptr) label = &label_;
-    for (int y = 0; y < label->height(); ++y) {
-      for (int x = 0; x < label->width(); ++x) {
-        ASSERT_EQ(label->at(x, y)[0], value)
-                      << "At pixel (" << x << ", " << y << ")";
-      }
-    }
-  }
-
-  // Confirms that all pixels in the member depth image have the same value.
-  void VerifyUniformDepth(float value, const ImageDepth32F* depth = nullptr) {
-    if (depth == nullptr) depth = &depth_;
-    if (value == std::numeric_limits<float>::infinity()) {
-      for (int y = 0; y < depth->height(); ++y) {
-        for (int x = 0; x < depth->width(); ++x) {
-          ASSERT_EQ(depth->at(x, y)[0], value);
-        }
-      }
-    } else {
-      for (int y = 0; y < depth->height(); ++y) {
-        for (int x = 0; x < depth->width(); ++x) {
-          ASSERT_NEAR(depth->at(x, y)[0], value, kDepthTolerance);
-        }
-      }
-    }
-  }
-
-  // Compute the set of outliers for a given set of camera properties.
-  static vector<ScreenCoord> GetOutliers(const CameraProperties& camera) {
-    return vector<ScreenCoord>{
-        {kInset, kInset},
-        {kInset, camera.height - kInset - 1},
-        {camera.width - kInset - 1, camera.height - kInset - 1},
-        {camera.width - kInset - 1, kInset}};
-  }
-
-  // Compute the inlier for the given set of camera properties.
-  static ScreenCoord GetInlier(const CameraProperties& camera) {
-    return ScreenCoord{camera.width / 2, camera.height / 2};
-  }
-
-  // Tests that the depth value in the given `image` at the given `coord` is
-  // the expected depth to within a tolerance. Handles the special case where
-  // the expected distance is infinity.
-  static ::testing::AssertionResult IsExpectedDepth(const ImageDepth32F& image,
-                                                    const ScreenCoord& coord,
-                                                    float expected_depth,
-                                                    float tolerance) {
-    const float actual_depth = image.at(coord.x, coord.y)[0];
-    if (expected_depth == std::numeric_limits<float>::infinity()) {
-      if (actual_depth == expected_depth) {
-        return ::testing::AssertionSuccess();
-      } else {
-        return ::testing::AssertionFailure()
-               << "Expected depth at " << coord << " to be infinity. Found: "
-               << actual_depth;
-      }
-    } else {
-      float delta = std::abs(expected_depth - actual_depth);
-      if (delta <= tolerance) {
-        return ::testing::AssertionSuccess();
-      } else {
-        return ::testing::AssertionFailure()
-               << "Expected depth at " << coord << " to be " << expected_depth
-               << ". Found " << actual_depth << ". Difference " << delta
-               << " is greater than tolerance " << tolerance;
-      }
-    }
-  }
-
-  // Verifies the "outlier" pixels for the given camera belong to the ground
-  // plane. If images are provided, the given images will be tested, otherwise
-  // the member images will be tested.
-  void VerifyOutliers(const RenderEngineVtk& renderer,
-                      const DepthCameraProperties& camera,
-                      const char* name,
-                      const ImageRgba8U* color_in = nullptr,
-                      const ImageDepth32F* depth_in = nullptr,
-                      const ImageLabel16I* label_in = nullptr) const {
-    const ImageRgba8U& color = color_in ? *color_in : color_;
-    const ImageDepth32F& depth = depth_in ? *depth_in : depth_;
-    const ImageLabel16I& label = label_in ? *label_in : label_;
-
-    for (const auto& screen_coord : GetOutliers(camera)) {
-      const int x = screen_coord.x;
-      const int y = screen_coord.y;
-      EXPECT_TRUE(CompareColor(expected_outlier_color_, color, screen_coord))
-                << "Color at: " << screen_coord << " for test: " << name;
-      EXPECT_TRUE(IsExpectedDepth(depth, screen_coord, expected_outlier_depth_,
-                                  kDepthTolerance))
-                << "Depth at: " << screen_coord << " for test: " << name;
-      EXPECT_EQ(label.at(x, y)[0], expected_outlier_label_)
-                << "Label at: " << screen_coord << " for test: " << name;
-    }
-  }
-
-  void SetUp() override {
-    ResetExpectations();
-  }
-
   // Tests that don't instantiate their own renderers should invoke this.
   void Init(const RigidTransformd& X_WR, bool add_terrain = false) {
     const Vector3d bg_rgb{
@@ -331,10 +181,6 @@ class RenderEngineVtkTest : public ::testing::Test {
     RenderEngineVtkParams params{{}, {}, bg_rgb};
     renderer_ = make_unique<RenderEngineVtk>(params);
     InitializeRenderer(X_WR, add_terrain, renderer_.get());
-    // Ensure that we truly have a non-default color.
-    EXPECT_FALSE(IsColorNear(
-        RgbaColor(kDefaultVisualColor, 1.),
-        RgbaColor(renderer_->default_diffuse())));
   }
 
   // Tests that instantiate their own renderers can initialize their renderers
@@ -373,50 +219,6 @@ class RenderEngineVtkTest : public ::testing::Test {
     return material;
   }
 
-  // Resets all expected values to the initial, default values.
-  void ResetExpectations() {
-    expected_color_ = RgbaColor{kDefaultVisualColor, 255};
-    expected_outlier_color_ = RgbaColor(kTerrainColorI, 255);
-    expected_outlier_depth_ = 3.f;
-    expected_object_depth_ = 2.f;
-    // We expect each test to explicitly set this.
-    expected_label_ = RenderLabel();
-    expected_outlier_label_ = RenderLabel::kDontCare;
-  }
-
-  // Populates the given renderer with the sphere required for
-  // PerformCenterShapeTest().
-  void PopulateSphereTest(RenderEngineVtk* renderer, bool use_texture = false) {
-    Sphere sphere{0.5};
-    expected_label_ = RenderLabel(12345);  // an arbitrary value.
-    renderer->RegisterVisual(geometry_id_, sphere, simple_material(use_texture),
-                             RigidTransformd::Identity(),
-                             true /* needs update */);
-    RigidTransformd X_WV{Vector3d{0, 0, 0.5}};
-    X_WV_.clear();
-    X_WV_.insert({geometry_id_, X_WV});
-    renderer->UpdatePoses(X_WV_);
-  }
-
-  void PopulateSimpleBoxTest(RenderEngineVtk* renderer) {
-    // Simple cube.
-    const double length = 1.0;
-    const Box box = Box::MakeCube(length);
-    expected_label_ = kDefaultLabel;
-    const GeometryId id = GeometryId::get_new_id();
-    PerceptionProperties props = simple_material(false);
-    renderer->RegisterVisual(id, box, props, RigidTransformd::Identity(),
-                             true /* needs update */);
-    // Leave the box centered on the xy plane, but raise it up for the expected
-    // depth in the camera (distance from eye to near surface):
-    //      expected depth = p_WC.z - length / 2 - p_WV.z;
-    const double p_WVo_z =
-        X_WC_.translation()(2) - length / 2 - expected_object_depth_;
-    RigidTransformd X_WV{Vector3d{0, 0, p_WVo_z}};
-    renderer->UpdatePoses(
-        unordered_map<GeometryId, RigidTransformd>{{id, X_WV}});
-    expected_color_ = default_color_;
-  }
 
   // Performs the work to test the rendering with a shape centered in the
   // image. To pass, the renderer will have to have been populated with a
@@ -431,29 +233,6 @@ class RenderEngineVtkTest : public ::testing::Test {
     ImageDepth32F depth(cam.width, cam.height);
     ImageLabel16I label(cam.width, cam.height);
     Render(renderer, &cam, &color, &depth, &label);
-
-    VerifyCenterShapeTest(*renderer, name, cam, color, depth, label);
-  }
-
-  void VerifyCenterShapeTest(const RenderEngineVtk& renderer,
-                              const char* name,
-                              const DepthCameraProperties& camera,
-                              const ImageRgba8U& color,
-                              const ImageDepth32F& depth,
-                              const ImageLabel16I& label) const {
-    VerifyOutliers(renderer, camera, name, &color, &depth, &label);
-
-    // Verifies inside the sphere.
-    const ScreenCoord inlier = GetInlier(camera);
-    const int x = inlier.x;
-    const int y = inlier.y;
-    EXPECT_TRUE(CompareColor(expected_color_, color, inlier))
-              << "Color at: " << inlier << " for test: " << name;
-    EXPECT_TRUE(IsExpectedDepth(depth, inlier, expected_object_depth_,
-                                kDepthTolerance))
-              << "Depth at: " << inlier << " for test: " << name;
-    EXPECT_EQ(label.at(x, y)[0], static_cast<int>(expected_label_))
-              << "Label at: " << inlier << " for test: " << name;
   }
 
   RgbaColor expected_color_{kDefaultVisualColor, 255};
