@@ -107,65 +107,131 @@ std::string RemoveFileExtension(const std::string& filepath) {
   return filepath.substr(0, last_dot);
 }
 
+constexpr char kRgbaDistortionFuncReplacement[] = R"__(
+  vec4 DoubleSphereDistort(vec4 view_pos) {
+    // FL double sphere camera model:
+    // "cols" : 2560,
+    // "rows" : 2048,
+    // "fx" : 1346.53239902215,
+    // "fy" : 1346.19704988697,
+    // "cx" : 1307.88289503998,
+    // "cy" : 1033.7367002217,
+    // "double_sphere" : {
+    // "xi" : -0.0715060319640005,
+    // "alpha" : 0.702225667086413
+    const float alpha = 0.702225667086413;
+    const float xi = -0.0715060319640005;
+    float x1 = view_pos[0];
+    float y1 = view_pos[1];
+    float z1 = view_pos[2];
+    // precalculations
+    float x1_2 = x1*x1;
+    float y1_2 = y1*y1;
+    float z1_2 = z1*z1;
+    float dist1 = sqrt(x1_2 + y1_2 + z1_2);
+    float z1_distort = xi*dist1 + z1;
+    float z1_distrot_2 = z1_distort * z1_distort;
+    float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
+    // rational distortion factor
+    float denom = alpha*dist2 + (1-alpha)*z1_distort;
+    float factor = z1/denom;
+
+    return vec4(x1 * factor, y1 * factor, z1, view_pos[3]);
+  }
+
+  vec4 DoubleSphereDistort2(vec4 view_pos) {
+    // FL double sphere camera model:
+    // "cols" : 2560,
+    // "rows" : 2048,
+    // "fx" : 1346.53239902215,
+    // "fy" : 1346.19704988697,
+    // "cx" : 1307.88289503998,
+    // "cy" : 1033.7367002217,
+    // "double_sphere" : {
+    // "xi" : -0.0715060319640005,
+    // "alpha" : 0.702225667086413
+    const float alpha = 0.702225667086413;
+    const float xi = -0.0715060319640005;
+
+    float z = view_pos[2];
+    float z_inv = 1 / z;
+    float x1 = view_pos[0] * z_inv;
+    float y1 = view_pos[1] * z_inv;
+
+    // precalculations
+    float x1_2 = x1*x1;
+    float y1_2 = y1*y1;
+    float dist1 = sqrt(x1_2 + y1_2 + 1);
+    float z1_distort = xi*dist1 + 1;
+    float z1_distrot_2 = z1_distort * z1_distort;
+    float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
+    // rational distortion factor
+    float denom = alpha*dist2 + (1-alpha)*z1_distort;
+    float factor = z/denom;
+
+    return vec4(x1 * factor, y1 * factor, z, view_pos[3]);
+  }
+
+  // distort the real world vertices using the rational model
+  vec4 RationalDistort(vec4 view_pos)
+  {
+    // normalize
+    float dist_coeffs[8] = float[8](
+      4.1925421198910247e-02,
+      -9.6463442423611379e-02,
+      -2.3391717576772839e-03,
+      5.8792609967242386e-04,
+      4.9171950039135250e-02,
+      0.0, 0.0, 0.0);
+    float z = view_pos[2];
+    float z_inv = 1 / z;
+    float x1 = view_pos[0] * z_inv;
+    float y1 = view_pos[1] * z_inv;
+    // precalculations
+    float x1_2 = x1*x1;
+    float y1_2 = y1*y1;
+    float x1_y1 = x1*y1;
+    float r2 = x1_2 + y1_2;
+    float r4 = r2*r2;
+    float r6 = r4*r2;
+    // rational distortion factor
+    float r_dist = (1 + dist_coeffs[0]*r2 +dist_coeffs[1]*r4 + dist_coeffs[4]*r6)
+      / (1 + dist_coeffs[5]*r2 + dist_coeffs[6]*r4 + dist_coeffs[7]*r6);
+    // full (rational + tangential) distortion
+    float x2 = x1*r_dist + 2*dist_coeffs[2]*x1_y1 + dist_coeffs[3]*(r2 + 2*x1_2);
+    float y2 = y1*r_dist + 2*dist_coeffs[3]*x1_y1 + dist_coeffs[2]*(r2 + 2*y1_2);
+    // denormalize for projection (which is a linear operation)
+    return vec4(x2*z, y2*z, z, view_pos[3]);
+  }
+
+  // Barrel distortion.
+  vec4 BarrelDistort(vec4 p)
+  {
+     float BarrelPower = 1.4;
+      vec2 v = p.xy / p.w;
+      // Convert to polar coords:
+      float radius = length(v);
+      if (radius > 0)
+      {
+        float theta = atan(v.y,v.x);
+        // Distort:
+        radius = pow(radius, BarrelPower);
+
+        // Convert back to Cartesian:
+        v.x = radius * cos(theta);
+        v.y = radius * sin(theta);
+        p.xy = v.xy * p.w;
+      }
+      return p;
+  }
+)__";
+
 constexpr char kRgbaDistortionVertexShaderReplacement[] = R"__(
-  // distort the real world vertices using the double sphere model
-  // vec4 distort(vec4 view_pos) {
-  //   const float alpha = 0.55;
-  //   const float xi = -0.20;
-  //   float x1 = view_pos[0];
-  //   float y1 = view_pos[1];
-  //   float z1 = view_pos[2];
-  //   // precalculations
-  //   float x1_2 = x1*x1;
-  //   float y1_2 = y1*y1;
-  //   float z1_2 = z1*z1;
-  //   float dist1 = sqrt(x1_2 + y1_2 + z1_2);
-  //   float z1_distort = xi*dist1 + z1;
-  //   float z1_distrot_2 = z1_distort * z1_distort;
-  //   float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
-  //   // rational distortion factor
-  //   float denom = alpha*dist2 + (1-alpha)*z1_distort;
-  //   float factor = z1/denom;
-  //   return vec4(x1*factor, y1*factor, z1, view_pos[3]);
-  // }
+  vertexVCVSOutput = MCVCMatrix * vertexMC;
 
-  // FL double sphere camera model:
-  // "cols" : 2560,
-  // "rows" : 2048,
-  // "fx" : 1346.53239902215,
-  // "fy" : 1346.19704988697,
-  // "cx" : 1307.88289503998,
-  // "cy" : 1033.7367002217,
-  // "double_sphere" : {
-  // "xi" : -0.0715060319640005,
-  // "alpha" : 0.702225667086413
+  vec4 vertexVC_distort = RationalDistort(vertexVCVSOutput);
 
-  vec4 vertexVC = MCVCMatrix * vertexMC;
-
-  const float alpha = 0.7022;
-  const float xi = -0.0715;
-  // const float alpha = 0.0;
-  // const float xi = 0.0;
-  float x1 = vertexVC[0];
-  float y1 = vertexVC[1];
-  float z1 = vertexVC[2];
-  // precalculations
-  float x1_2 = x1*x1;
-  float y1_2 = y1*y1;
-  float z1_2 = z1*z1;
-  float dist1 = sqrt(x1_2 + y1_2 + z1_2);
-  float z1_distort = xi*dist1 + z1;
-  float z1_distrot_2 = z1_distort * z1_distort;
-  float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
-  // rational distortion factor
-  float denom = alpha*dist2 + (1-alpha)*z1_distort;
-  float factor = z1/denom;
-
-  vertexVCVSOutput = vec4(x1*factor, y1*factor, z1, vertexVC[3]);
-
-  vec4 vertexMC_distort = inverse(MCVCMatrix) * vertexVCVSOutput;
-
-  gl_Position = MCDCMatrix * vertexMC_distort;
+  gl_Position = MCDCMatrix * inverse(MCVCMatrix) * vertexVC_distort;
 )__";
 
 }  // namespace
@@ -624,6 +690,10 @@ void RenderEngineVtk::ImplementGeometry(vtkPolyDataAlgorithm* source,
   mappers[ImageType::kColor]->AddShaderReplacement(
       vtkShader::Vertex, "//VTK::PositionVC::Impl", true,
       kRgbaDistortionVertexShaderReplacement, true);
+
+  mappers[ImageType::kColor]->AddShaderReplacement(
+      vtkShader::Vertex, "//VTK::Light::Dec", true,
+      kRgbaDistortionFuncReplacement, true);
 
   for (auto& mapper : mappers) {
     mapper->SetInputConnection(source->GetOutputPort());

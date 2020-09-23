@@ -57,7 +57,7 @@ const int kWidth = 2560;
 const int kHeight = 2048;
 const double kZNear = 0.5;
 const double kZFar = 5.;
-const double kFovY = M_PI_4;
+const double kFovY = 1.62144727;
 const bool kShowWindow = true;
 
 // The following tolerance is used due to a precision difference between Ubuntu
@@ -151,7 +151,7 @@ class RenderEngineVtkTest : public ::testing::Test {
         // Looking straight down from kDefaultDistance meters above the ground.
         X_WC_(RotationMatrixd{AngleAxisd(M_PI, Vector3d::UnitY()) *
                               AngleAxisd(-M_PI_2, Vector3d::UnitZ())},
-              {-0.2, 0.0, kDefaultDistance}),
+              {0, 0.0, kDefaultDistance}),
         geometry_id_(GeometryId::get_new_id()) {}
 
  protected:
@@ -264,13 +264,13 @@ TEST_F(RenderEngineVtkTest, TextureMeshTest) {
   Init(X_WC_, true);
 
   auto filename =
-      FindResourceOrThrow("drake/geometry/render/test/gilchrist_island_body.obj");
-  Mesh mesh(filename);
+      FindResourceOrThrow("drake/geometry/render/test/distortion_test_checkerboard.obj");
+  Mesh mesh(filename, 0.2);
   expected_label_ = RenderLabel(4);
   PerceptionProperties material = simple_material();
   material.AddProperty(
       "phong", "diffuse_map",
-      FindResourceOrThrow("drake/geometry/render/test/gilchrist_island_body_color.png"));
+      FindResourceOrThrow("drake/geometry/render/test/distortion_test_checkerboard.png"));
   const GeometryId id = GeometryId::get_new_id();
   renderer_->RegisterVisual(id, mesh, material, RigidTransformd::Identity(),
                             true /* needs update */);

@@ -183,9 +183,9 @@ filegroup(
     testonly = 1,
     srcs = [
         "test/diag_gradient.png",
-        "test/gilchrist_island_body.obj",
-        "test/gilchrist_island_body_color.png",
-        "test/gilchrist_island_body.mtl",
+        "test/distortion_test_checkerboard.obj",
+        "test/distortion_test_checkerboard.png",
+        "test/distortion_test_checkerboard.mtl",
     ],
 )
 
