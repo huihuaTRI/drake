@@ -12,10 +12,18 @@
 #include <Eigen/Dense>
 #include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <vtkImageData.h>
+#include <vtkNew.h>
 #include <vtkOpenGLTexture.h>
+#include <vtkPNGReader.h>
+#include <vtkPNGWriter.h>
 #include <vtkProperty.h>
+#include <vtkSmartPointer.h>
+#include <vtkTIFFReader.h>
+#include <vtkTIFFWriter.h>
 
 #include "drake/common/drake_copyable.h"
+#include "drake/common/filesystem.h"
 #include "drake/common/find_resource.h"
 #include "drake/common/test_utilities/eigen_matrix_compare.h"
 #include "drake/common/test_utilities/expect_no_throw.h"
@@ -47,10 +55,12 @@ using systems::sensors::CameraInfo;
 using systems::sensors::Color;
 using systems::sensors::ColorD;
 using systems::sensors::ColorI;
+using systems::sensors::Image;
 using systems::sensors::ImageDepth32F;
 using systems::sensors::ImageLabel16I;
 using systems::sensors::ImageRgba8U;
 using systems::sensors::InvalidDepth;
+using systems::sensors::PixelType;
 
 // Default camera properties.
 const int kWidth = 2560;
@@ -58,7 +68,7 @@ const int kHeight = 2048;
 const double kZNear = 0.5;
 const double kZFar = 5.;
 const double kFovY = 1.62144727;
-const bool kShowWindow = true;
+const bool kShowWindow = false;
 
 // The following tolerance is used due to a precision difference between Ubuntu
 // Linux and Mac OSX.
@@ -105,6 +115,204 @@ static constexpr int kInset{10};
 struct ScreenCoord {
   int x{};
   int y{};
+};
+
+template <PixelType kPixelType>
+void SaveToFileHelper(const Image<kPixelType>& image,
+                      const std::string& file_path) {
+  const int width = image.width();
+  const int height = image.height();
+  const int num_channels = Image<kPixelType>::kNumChannels;
+
+  vtkSmartPointer<vtkImageWriter> writer;
+  vtkNew<vtkImageData> vtk_image;
+  vtk_image->SetDimensions(width, height, 1);
+
+  // NOTE: This excludes *many* of the defined `PixelType` values.
+  switch (kPixelType) {
+    case PixelType::kRgba8U:
+    case PixelType::kGrey8U:
+      vtk_image->AllocateScalars(VTK_UNSIGNED_CHAR, num_channels);
+      writer = vtkSmartPointer<vtkPNGWriter>::New();
+      break;
+    case PixelType::kDepth16U:
+      vtk_image->AllocateScalars(VTK_UNSIGNED_SHORT, num_channels);
+      writer = vtkSmartPointer<vtkPNGWriter>::New();
+      break;
+    case PixelType::kDepth32F:
+      vtk_image->AllocateScalars(VTK_FLOAT, num_channels);
+      writer = vtkSmartPointer<vtkTIFFWriter>::New();
+      break;
+    case PixelType::kLabel16I:
+      vtk_image->AllocateScalars(VTK_UNSIGNED_SHORT, num_channels);
+      writer = vtkSmartPointer<vtkPNGWriter>::New();
+      break;
+    default:
+      throw std::logic_error(
+          "Unsupported image type; cannot be written to file");
+  }
+
+  auto image_ptr = reinterpret_cast<typename Image<kPixelType>::T*>(
+      vtk_image->GetScalarPointer());
+  const int num_scalar_components = vtk_image->GetNumberOfScalarComponents();
+  DRAKE_DEMAND(num_scalar_components == num_channels);
+
+  for (int v = height - 1; v >= 0; --v) {
+    for (int u = 0; u < width; ++u) {
+      for (int c = 0; c < num_channels; ++c) {
+        image_ptr[c] =
+            static_cast<typename Image<kPixelType>::T>(image.at(u, v)[c]);
+      }
+      image_ptr += num_scalar_components;
+    }
+  }
+
+  writer->SetFileName(file_path.c_str());
+  writer->SetInputData(vtk_image.GetPointer());
+  writer->Write();
+}
+
+template <PixelType kPixelType>
+void ReadImage(const std::string& image_name, Image<kPixelType>* image) {
+  filesystem::path image_path(image_name);
+  if (filesystem::exists(image_path)) {
+    vtkSmartPointer<vtkImageReader2> reader;
+    switch (kPixelType) {
+      case PixelType::kRgba8U:
+      case PixelType::kGrey8U:
+      case PixelType::kDepth16U:
+      case PixelType::kLabel16I:
+        reader = vtkSmartPointer<vtkPNGReader>::New();
+        break;
+      case PixelType::kDepth32F:
+        reader = vtkSmartPointer<vtkTIFFReader>::New();
+        break;
+      default:
+        throw std::logic_error("Trying to read an unknown image type");
+    }
+    reader->SetFileName(image_name.c_str());
+    vtkNew<vtkImageExport> exporter;
+    exporter->SetInputConnection(reader->GetOutputPort());
+    exporter->Update();
+    vtkImageData* image_data = exporter->GetInput();
+    // Assumes 1-dimensional data -- the 4x1 image.
+    std::cout << "Data dimension: " << image_data->GetDataDimension()
+              << std::endl;
+    if (image_data->GetDataDimension() == 2) {
+      int read_width;
+      image_data->GetDimensions(&read_width);
+      if (read_width == image->width()) {
+        exporter->Export(image->at(0, 0));
+        return;
+      }
+    }
+    int dims[3];
+    exporter->GetDataDimensions(&dims[0]);
+    std::cout << "Image dimensions: " << dims[0] << ", " << dims[1] << ", "
+              << dims[2] << std::endl;
+    throw std::logic_error("The image size does not match.");
+  } else {
+    throw std::logic_error("The image to be read does not exist.");
+  }
+}
+
+class DoubleSphereCameraModel {
+ public:
+  DoubleSphereCameraModel(double fx, double fy, double cx, double cy, double xi,
+                          double alpha)
+      : fx_(fx), fy_(fy), cx_(cx), cy_(cy), xi_(xi), alpha_(alpha) {}
+
+  inline void Point3dToPixel(const Eigen::Vector3d& point,
+                             Eigen::Vector2d* pixel) const {
+    // Not checking the output pointer due to efficiency.
+    double xx = point.x() * point.x();
+    double yy = point.y() * point.y();
+    double zz = point.z() * point.z();
+    double d1 = std::sqrt(xx + yy + zz);
+    double z2 = xi_ * d1 + point.z();
+    double d2 = std::sqrt(xx + yy + z2 * z2);
+    double denominator = alpha_ * d2 + (1 - alpha_) * z2;
+    pixel->x() = fx_ * point.x() / denominator + cx_;
+    pixel->y() = fy_ * point.y() / denominator + cy_;
+  }
+
+  inline void PixelToRay3d(const Eigen::Vector2d& pixel,
+                           Eigen::Vector3d* ray) const {
+    // Not checking the output pointer due to efficiency.
+    double mx = (pixel.x() - cx_) / fx_;
+    double my = (pixel.y() - cy_) / fy_;
+    double mxx = mx * mx;
+    double myy = my * my;
+    double rr = mxx + myy;
+    double s1 = std::sqrt(1 - (2 * alpha_ - 1) * rr);
+    double denominator = alpha_ * s1 + 1 - alpha_;
+    double mz = (1 - alpha_ * alpha_ * rr) / denominator;
+    double mzz = mz * mz;
+    double s2 = std::sqrt(mzz + (1 - xi_ * xi_) * rr);
+    double c = (mz * xi_ + s2) / (mzz + rr);
+    ray->x() = c * mx;
+    ray->y() = c * my;
+    ray->z() = c * mz - xi_;
+  }
+
+  void ScaleModel(double factor) {
+    fx_ *= factor;
+    fy_ *= factor;
+    cx_ *= factor;
+    cy_ *= factor;
+  }
+
+  double fx() const { return fx_; }
+  double fy() const { return fy_; }
+  double cx() const { return cx_; }
+  double cy() const { return cy_; }
+  double xi() const { return xi_; }
+  double alpha() const { return alpha_; }
+
+ private:
+  double fx_ = 0.0;
+  double fy_ = 0.0;
+  double cx_ = 0.0;
+  double cy_ = 0.0;
+  double xi_ = 0.0;
+  double alpha_ = 0.0;
+};
+
+class LinearCameraModel {
+ public:
+  LinearCameraModel(double fx, double fy, double cx, double cy)
+      : fx_(fx), fy_(fy), cx_(cx), cy_(cy) {}
+
+  inline void Point3dToPixel(const Eigen::Vector3d& point,
+                             Eigen::Vector2d* pixel) const {
+    pixel->x() = point.x() * fx_ / point.z() + cx_;
+    pixel->y() = point.y() * fy_ / point.z() + cy_;
+  }
+
+  inline void PixelToRay3d(const Eigen::Vector2d& pixel,
+                           Eigen::Vector3d* ray) const {
+    ray->x() = (pixel.x() - cx_) / fx_;
+    ray->y() = (pixel.y() - cy_) / fy_;
+    ray->z() = 1;
+  }
+
+  void ScaleModel(double factor) {
+    fx_ *= factor;
+    fy_ *= factor;
+    cx_ *= factor;
+    cy_ *= factor;
+  }
+
+  double fx() const { return fx_; }
+  double fy() const { return fy_; }
+  double cx() const { return cx_; }
+  double cy() const { return cy_; }
+
+ private:
+  double fx_ = 0.0;
+  double fy_ = 0.0;
+  double cx_ = 0.0;
+  double cy_ = 0.0;
 };
 
 // Utility struct for doing color testing; provides three mechanisms for
@@ -219,22 +427,6 @@ class RenderEngineVtkTest : public ::testing::Test {
     return material;
   }
 
-
-  // Performs the work to test the rendering with a shape centered in the
-  // image. To pass, the renderer will have to have been populated with a
-  // compatible shape and camera configuration (e.g., PopulateSphereTest()).
-  void PerformCenterShapeTest(RenderEngineVtk* renderer,
-                              const char* name,
-                              const DepthCameraProperties* camera = nullptr) {
-    const DepthCameraProperties& cam = camera ? *camera : camera_;
-    // Can't use the member images in case the camera has been configured to a
-    // different size than the default camera_ configuration.
-    ImageRgba8U color(cam.width, cam.height);
-    ImageDepth32F depth(cam.width, cam.height);
-    ImageLabel16I label(cam.width, cam.height);
-    Render(renderer, &cam, &color, &depth, &label);
-  }
-
   RgbaColor expected_color_{kDefaultVisualColor, 255};
   RgbaColor expected_outlier_color_{kDefaultVisualColor, 255};
   float expected_outlier_depth_{3.f};
@@ -263,24 +455,56 @@ class RenderEngineVtkTest : public ::testing::Test {
 TEST_F(RenderEngineVtkTest, TextureMeshTest) {
   Init(X_WC_, true);
 
-  auto filename =
-      FindResourceOrThrow("drake/geometry/render/test/distortion_test_checkerboard.obj");
+  auto filename = FindResourceOrThrow(
+      "drake/geometry/render/test/distortion_test_checkerboard.obj");
   Mesh mesh(filename, 0.2);
   expected_label_ = RenderLabel(4);
   PerceptionProperties material = simple_material();
   material.AddProperty(
       "phong", "diffuse_map",
-      FindResourceOrThrow("drake/geometry/render/test/distortion_test_checkerboard.png"));
+      FindResourceOrThrow(
+          "drake/geometry/render/test/distortion_test_checkerboard.png"));
   const GeometryId id = GeometryId::get_new_id();
   renderer_->RegisterVisual(id, mesh, material, RigidTransformd::Identity(),
                             true /* needs update */);
   renderer_->UpdatePoses(unordered_map<GeometryId, RigidTransformd>{
       {id, RigidTransformd::Identity()}});
 
-  expected_color_ = RgbaColor(kTextureColor, 255);
-  PerformCenterShapeTest(renderer_.get(), "Textured mesh test");
+  ImageRgba8U color(camera_.width, camera_.height);
+  ImageDepth32F depth(camera_.width, camera_.height);
+  ImageLabel16I label(camera_.width, camera_.height);
+  Render(renderer_.get(), &camera_, &color, &depth, &label);
 
-  std::promise<void>().get_future().wait();
+  const std::string file_path = "/tmp/camera_distortion/color_image.png";
+  SaveToFileHelper(color, file_path);
+
+  ImageRgba8U color_read(camera_.width, camera_.height);
+  ReadImage(file_path, &color_read);
+  // std::promise<void>().get_future().wait_for(std::chrono::seconds(10));
+}
+
+TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
+  ImageRgba8U color_nodistortion(camera_.width, camera_.height);
+  ImageRgba8U color_distorted(camera_.width, camera_.height);
+
+  const std::string no_distortion_image_path =
+      "/home/huihuazhao/Pictures/color_image_no_distortion.png";
+  const std::string distorted_image_path =
+      "/home/huihuazhao/Pictures/color_image_distortion.png";
+
+  ReadImage(no_distortion_image_path, &color_nodistortion);
+  ReadImage(distorted_image_path, &color_distorted);
+
+  DoubleSphereCameraModel dd_camera_model(1346.53239902215, 1346.53239902215,
+                                          1280, 1024, -0.0715060319640005,
+                                          0.702225667086413);
+
+  LinearCameraModel linear_camera_model(1346.53239902215, 1346.53239902215,
+                                        1280, 1024);
+  for (int i = 0; i < camera_.width; ++i) {
+    for (int j = 0; j < camera_.height; ++j) {
+    }
+  }
 }
 
 }  // namespace
