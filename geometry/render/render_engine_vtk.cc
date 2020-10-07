@@ -235,7 +235,7 @@ constexpr char kRgbaDistortionFuncReplacement[] = R"__(
 constexpr char kRgbaDistortionVertexShaderReplacement[] = R"__(
   vertexVCVSOutput = MCVCMatrix * vertexMC;
 
-  vec4 vertexVC_distort = NoDistort(vertexVCVSOutput);
+  vec4 vertexVC_distort = DoubleSphereDistort2(vertexVCVSOutput);
 
   gl_Position = MCDCMatrix * inverse(MCVCMatrix) * vertexVC_distort;
 )__";

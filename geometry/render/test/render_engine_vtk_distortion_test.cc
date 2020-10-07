@@ -1,5 +1,6 @@
 #include "drake/geometry/render/render_engine_vtk.h"
 
+#include <cmath>
 #include <cstring>
 #include <future>
 #include <limits>
@@ -68,54 +69,16 @@ const int kHeight = 2048;
 const double kZNear = 0.5;
 const double kZFar = 5.;
 const double kFovY = 1.62144727;
-const bool kShowWindow = false;
-
-// The following tolerance is used due to a precision difference between Ubuntu
-// Linux and Mac OSX.
-const double kColorPixelTolerance = 1.001;
-// NOTE: The depth tolerance is this large mostly due to the combination of
-// several factors:
-//   - the sphere test (sphere against terrain)
-//   - The even-valued window dimensions
-//   - the tests against various camera properties
-// The explanation is as follows. The distance to the sphere is only exactly
-// 2 at the point of the sphere directly underneath the camera (the sphere's
-// "peak"). However, with an even-valued window dimension, we never really
-// sample that point. We sample the center of pixels all evenly arrayed around
-// that point. So, that introduces some error. This error is further increased
-// in ellipsoid tests when sampling around the elongated ends. As the image gets
-// *smaller* the pixels get bigger and so the distance away from the peak center
-// increases, which, in turn, increase the measured distance for the fragment.
-// This tolerance accounts for the test case where one image has pixels that are
-// *4X* larger (in area) than the default image size.
-const double kDepthTolerance = 1e-3;
+const bool kShowWindow = true;
 
 // Background (sky) and terrain colors.
-const ColorI kBgColor = {254u, 127u, 0u};
-const ColorD kTerrainColorD{0., 0., 0.};
-const ColorI kTerrainColorI{0, 0, 0};
-// box.png contains a single pixel with the color (4, 241, 33). If the image
-// changes, the expected color would likewise have to change.
-const ColorI kTextureColor{4, 241, 33};
+const ColorI kBgColor = {255u, 255u, 255u};
+const ColorD kTerrainColorD{0.4, 0.5, 0.};
 
 // Provide a default visual color for these tests -- it is intended to be
 // different from the default color of the VTK render engine.
 const ColorI kDefaultVisualColor = {229u, 229u, 229u};
 const float kDefaultDistance{5.f};
-
-const RenderLabel kDefaultLabel{13531};
-
-// Values to be used with the "centered shape" tests.
-// The amount inset from the edge of the images to *still* expect ground plane
-// values.
-static constexpr int kInset{10};
-
-// Holds `(x, y)` indices of the screen coordinate system where the ranges of
-// `x` and `y` are [0, image_width) and [0, image_height) respectively.
-struct ScreenCoord {
-  int x{};
-  int y{};
-};
 
 template <PixelType kPixelType>
 void SaveToFileHelper(const Image<kPixelType>& image,
@@ -196,8 +159,6 @@ void ReadImage(const std::string& image_name, Image<kPixelType>* image) {
     exporter->Update();
     vtkImageData* image_data = exporter->GetInput();
     // Assumes 1-dimensional data -- the 4x1 image.
-    std::cout << "Data dimension: " << image_data->GetDataDimension()
-              << std::endl;
     if (image_data->GetDataDimension() == 2) {
       int read_width;
       image_data->GetDimensions(&read_width);
@@ -315,10 +276,84 @@ class LinearCameraModel {
   double cy_ = 0.0;
 };
 
+void CopyPixelValue(const ImageRgba8U& source_img,
+                    const Eigen::Vector2d& source_pixel,
+                    const Eigen::Vector2d& dest_pixel, ImageRgba8U* dest_img) {
+  auto source_pixel_value =
+      source_img.at(std::round(source_pixel.x()), std::round(source_pixel.y()));
+  auto dest_pixel_value =
+      dest_img->at(std::round(dest_pixel.x()), std::round(dest_pixel.y()));
+  for (int i = 0; i < 4; ++i) {
+    dest_pixel_value[i] = source_pixel_value[i];
+  }
+}
+
+void SubtractPixelValue(const ImageRgba8U& img_a, const ImageRgba8U& img_b,
+                        const Eigen::Vector2d& pixel_local,
+                        ImageRgba8U* dest_img) {
+  const int pixel_x = std::round(pixel_local.x());
+  const int pixel_y = std::round(pixel_local.y());
+  const auto& img_a_pixel_value = img_a.at(pixel_x, pixel_y);
+  const auto& img_b_pixel_value = img_b.at(pixel_x, pixel_y);
+  auto dest_pixel_value = dest_img->at(pixel_x, pixel_y);
+  for (int i = 0; i < 4; ++i) {
+    dest_pixel_value[i] = std::abs(img_a_pixel_value[i] - img_b_pixel_value[i]);
+  }
+}
+
+// double CalcPixelValueDiff(const ImageRgba8U& img_a, const ImageRgba8U& img_b,
+//                     const Eigen::Vector2d& pixel_local) {
+//   const int pixel_x = std::round(pixel_local.x());
+//   const int pixel_y = std::round(pixel_local.y());
+//   auto img_a_pixel_value = img_a.at(pixel_x, pixel_y);
+//   auto img_b_pixel_value = img_b.at(pixel_x, pixel_y);
+
+//   double ret = 0;
+//   for (int i = 0; i < 4; ++i) {
+//     const double diff = img_a_pixel_value[i] - img_b_pixel_value[i];
+//     ret += diff * diff;
+//   }
+//   return std::sqrt(ret);
+// }
+
+// void CopyPixelValueWithInterpolation(const ImageRgba8U& source_img,
+//                     const Eigen::Vector2d& source_pixel,
+//                     const Eigen::Vector2d& dest_pixel, ImageRgba8U* dest_img)
+//                     {
+//   auto source_pixel_value =
+//       source_img.at(std::round(source_pixel.x()),
+//       std::round(source_pixel.y()));
+//   int x_left = std::floor(dest_pixel.x());
+//   double x_left_fraction = dest_pixel.x() - x_left;
+//   int y_bottom = std::floor(dest_pixel.y());
+//   double y_bottom_fraction = dest_pixel.y() - y_bottom;
+//   DRAKE_DEMAND(x_left_fraction >= 0 && x_left_fraction <= 1);
+//   DRAKE_DEMAND(y_bottom_fraction >= 0 && y_bottom_fraction <= 1);
+
+//   auto left_bottom_pixel_value = dest_img->at(x_left, y_bottom);
+//   auto left_top_pixel_value = dest_img->at(x_left, y_bottom + 1);
+//   auto right_bottom_pixel_value = dest_img->at(x_left + 1, y_bottom);
+//   auto right_top_pixel_value = dest_img->at(x_left + 1, y_bottom + 1);
+//   for (int i = 0; i < 4; ++i) {
+//     left_bottom_pixel_value[i] +=
+//         (x_left_fraction + y_bottom_fraction) / 4 * source_pixel_value[i];
+//     left_top_pixel_value[i] +=
+//         (x_left_fraction + 1 - y_bottom_fraction) / 4 *
+//         source_pixel_value[i];
+//     right_bottom_pixel_value[i] +=
+//         (1 - x_left_fraction + y_bottom_fraction) / 4 *
+//         source_pixel_value[i];
+//     right_top_pixel_value[i] += (1 - x_left_fraction + 1 - y_bottom_fraction)
+//     /
+//                                 4 * source_pixel_value[i];
+//   }
+// }
+
 // Utility struct for doing color testing; provides three mechanisms for
 // creating a common rgba color. We get colors from images (as a pointer to
-// unsigned bytes, as a (ColorI, alpha) pair, and from a normalized color. It's
-// nice to articulate tests without having to worry about those details.
+// unsigned bytes, as a (ColorI, alpha) pair, and from a normalized color.
+// It's nice to articulate tests without having to worry about those
+// details.
 struct RgbaColor {
   RgbaColor(const Color<int>& c, int alpha)
       : r(c.r), g(c.g), b(c.b), a(alpha) {}
@@ -334,22 +369,6 @@ struct RgbaColor {
   int a;
 };
 
-// This test suite facilitates a test with a ground plane and floating shape.
-// The camera is positioned above the shape looking straight down. All
-// of the images produced from these tests should have the following properties:
-//   1. The shape is centered.
-//   2. The ground plane fills the whole background (i.e., no background color
-//      should be visible), except for noted exceptions.
-//   3. The rendered shape should be smaller than the full image size with a
-//      minimum number of pixels of ground plane between the shape and the edge
-//      of the image. The minimum number of pixels is defined by kInset.
-//
-// The tests examine the rendered images and tests some discrete pixels, mapped
-// to the image size (w, h):
-//   1. A "center" pixel (x, y) such that x = w / 2 and y = h / 2.
-//   2. Border pixels (xᵢ, yᵢ) which are pixels inset from each corner:
-//      e.g., (i, i), (w - i - 1, i), (w - i - 1, h - i - 1), (i, h - i - 1),
-//      for an inset value of `i` pixels.
 class RenderEngineVtkTest : public ::testing::Test {
  public:
   RenderEngineVtkTest()
@@ -369,17 +388,11 @@ class RenderEngineVtkTest : public ::testing::Test {
   // test.
   void Render(RenderEngineVtk* renderer = nullptr,
               const DepthCameraProperties* camera_in = nullptr,
-              ImageRgba8U* color_out = nullptr,
-              ImageDepth32F* depth_out = nullptr,
-              ImageLabel16I* label_out = nullptr) {
+              ImageRgba8U* color_out = nullptr) {
     if (!renderer) renderer = renderer_.get();
     const DepthCameraProperties& camera = camera_in ? *camera_in : camera_;
     ImageRgba8U* color = color_out ? color_out : &color_;
-    ImageDepth32F* depth = depth_out ? depth_out : &depth_;
-    ImageLabel16I* label = label_out ? label_out : &label_;
     renderer->RenderColorImage(camera, kShowWindow, color);
-    renderer->RenderDepthImage(camera, depth);
-    renderer->RenderLabelImage(camera, false, label);
   }
 
   // Tests that don't instantiate their own renderers should invoke this.
@@ -471,40 +484,97 @@ TEST_F(RenderEngineVtkTest, TextureMeshTest) {
       {id, RigidTransformd::Identity()}});
 
   ImageRgba8U color(camera_.width, camera_.height);
-  ImageDepth32F depth(camera_.width, camera_.height);
-  ImageLabel16I label(camera_.width, camera_.height);
-  Render(renderer_.get(), &camera_, &color, &depth, &label);
+  Render(renderer_.get(), &camera_, &color);
 
-  const std::string file_path = "/tmp/camera_distortion/color_image.png";
-  SaveToFileHelper(color, file_path);
+  // const std::string file_path = "/tmp/camera_distortion/color_image.png";
+  // SaveToFileHelper(color, file_path);
 
-  ImageRgba8U color_read(camera_.width, camera_.height);
-  ReadImage(file_path, &color_read);
-  // std::promise<void>().get_future().wait_for(std::chrono::seconds(10));
+  std::promise<void>().get_future().wait_for(std::chrono::seconds(10));
 }
 
 TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
-  ImageRgba8U color_nodistortion(camera_.width, camera_.height);
-  ImageRgba8U color_distorted(camera_.width, camera_.height);
-
   const std::string no_distortion_image_path =
       "/home/huihuazhao/Pictures/color_image_no_distortion.png";
-  const std::string distorted_image_path =
-      "/home/huihuazhao/Pictures/color_image_distortion.png";
-
+  ImageRgba8U color_nodistortion(camera_.width, camera_.height);
   ReadImage(no_distortion_image_path, &color_nodistortion);
+
+  const std::string distorted_image_path =
+      "/home/huihuazhao/Pictures/color_image_distortion2.png";
+  ImageRgba8U color_distorted(camera_.width, camera_.height);
   ReadImage(distorted_image_path, &color_distorted);
 
-  DoubleSphereCameraModel dd_camera_model(1346.53239902215, 1346.53239902215,
-                                          1280, 1024, -0.0715060319640005,
+  DoubleSphereCameraModel dd_camera_model(1216.75498071, 1216.75498071, 1280,
+                                          1024, -0.0715060319640005,
                                           0.702225667086413);
+  // DoubleSphereCameraModel dd_camera_model(1346.53239902215, 1346.53239902215,
+  //                                         1280, 1024, 0.0, 0.0);
 
-  LinearCameraModel linear_camera_model(1346.53239902215, 1346.53239902215,
-                                        1280, 1024);
+  LinearCameraModel linear_camera_model(1216.75498071, 1216.75498071, 1280,
+                                        1024);
+
+  // Convert the non-distorted image to distorted image using camera models.
+  Eigen::Vector2d p_nodist;
+  Eigen::Vector2d p_dist;
+  Eigen::Vector3d ray_nodist;
+  ImageRgba8U color_distorted_calc(camera_.width, camera_.height);
   for (int i = 0; i < camera_.width; ++i) {
     for (int j = 0; j < camera_.height; ++j) {
+      p_nodist.x() = i;
+      p_nodist.y() = j;
+      linear_camera_model.PixelToRay3d(p_nodist, &ray_nodist);
+      dd_camera_model.Point3dToPixel(ray_nodist, &p_dist);
+
+      CopyPixelValue(color_nodistortion, p_nodist, p_dist,
+                     &color_distorted_calc);
+
+      // if (i % 10000 == 0 && j % 10 == 0) {
+      //   const double pixel_value_error =
+      //       CalcPixelValueDiff(color_distorted_calc, color_distorted,
+      //       p_dist);
+      //   std::cout << "Original pixel localtion: " << p_nodist.transpose()
+      //             << ". Distorted pixel location: " << p_dist.transpose()
+      //             << std::endl;
+      //   std::cout << "Pixel value error between rendered and calculated: " <<
+      //       pixel_value_error << std::endl;
+      // }
     }
   }
+  const std::string file_path =
+      "/tmp/camera_distortion/color_image_distortion_calc.png";
+  SaveToFileHelper(color_distorted_calc, file_path);
+
+  ImageRgba8U color_distorted_diff(camera_.width, camera_.height);
+  for (int i = 0; i < camera_.width; ++i) {
+    for (int j = 0; j < camera_.height; ++j) {
+      p_dist.x() = i;
+      p_dist.y() = j;
+      SubtractPixelValue(color_distorted_calc, color_distorted, p_dist,
+                         &color_distorted_diff);
+    }
+  }
+  const std::string file_path_diff =
+      "/tmp/camera_distortion/color_image_distortion_diff.png";
+  SaveToFileHelper(color_distorted_diff, file_path_diff);
+
+  // Convert the rendered distorted image to non-distorted image using camera
+  // models.
+  ImageRgba8U color_nodistortion_calc(camera_.width, camera_.height);
+  Eigen::Vector3d ray_dist;
+  for (int i = 0; i < camera_.width; ++i) {
+    for (int j = 0; j < camera_.height; ++j) {
+      p_dist.x() = i;
+      p_dist.y() = j;
+      dd_camera_model.PixelToRay3d(p_dist, &ray_dist);
+
+      linear_camera_model.Point3dToPixel(ray_dist, &p_nodist);
+      CopyPixelValue(color_distorted, p_dist, p_nodist,
+                     &color_nodistortion_calc);
+    }
+  }
+
+  const std::string file_path2 =
+      "/tmp/camera_distortion/color_image_nodistortion_calc.png";
+  SaveToFileHelper(color_nodistortion_calc, file_path2);
 }
 
 }  // namespace
