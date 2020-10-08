@@ -67,16 +67,13 @@ using systems::sensors::PixelType;
 const int kWidth = 2560;
 const int kHeight = 2048;
 const double kZNear = 0.5;
-const double kZFar = 5.;
+const double kZFar = 10.;
 const double kFovY = 1.62144727;
-const bool kShowWindow = true;
+const bool kShowWindow = false;
 
 // Background (sky) and terrain colors.
-const ColorI kBgColor = {255u, 255u, 255u};
-const ColorD kTerrainColorD{0.4, 0.5, 0.};
-
-// Provide a default visual color for these tests -- it is intended to be
-// different from the default color of the VTK render engine.
+const ColorI kBgColor = {254u, 127u, 0u};
+const ColorD kTerrainColorD{0., 0., 0.};
 const ColorI kDefaultVisualColor = {229u, 229u, 229u};
 const float kDefaultDistance{5.f};
 
@@ -373,8 +370,6 @@ class RenderEngineVtkTest : public ::testing::Test {
  public:
   RenderEngineVtkTest()
       : color_(kWidth, kHeight),
-        depth_(kWidth, kHeight),
-        label_(kWidth, kHeight),
         // Looking straight down from kDefaultDistance meters above the ground.
         X_WC_(RotationMatrixd{AngleAxisd(M_PI, Vector3d::UnitY()) *
                               AngleAxisd(-M_PI_2, Vector3d::UnitZ())},
@@ -387,28 +382,20 @@ class RenderEngineVtkTest : public ::testing::Test {
   // This interface allows that to be completely reconfigured by the calling
   // test.
   void Render(RenderEngineVtk* renderer = nullptr,
-              const DepthCameraProperties* camera_in = nullptr,
               ImageRgba8U* color_out = nullptr) {
     if (!renderer) renderer = renderer_.get();
-    const DepthCameraProperties& camera = camera_in ? *camera_in : camera_;
     ImageRgba8U* color = color_out ? color_out : &color_;
-    renderer->RenderColorImage(camera, kShowWindow, color);
+    renderer->RenderColorImage(camera_, kShowWindow, color);
   }
 
   // Tests that don't instantiate their own renderers should invoke this.
   void Init(const RigidTransformd& X_WR, bool add_terrain = false) {
-    const Vector3d bg_rgb{
-        kBgColor.r / 255., kBgColor.g / 255., kBgColor.b / 255.};
+    const Vector3d bg_rgb{kBgColor.r / 255., kBgColor.g / 255.,
+                          kBgColor.b / 255.};
     RenderEngineVtkParams params{{}, {}, bg_rgb};
     renderer_ = make_unique<RenderEngineVtk>(params);
-    InitializeRenderer(X_WR, add_terrain, renderer_.get());
-  }
 
-  // Tests that instantiate their own renderers can initialize their renderers
-  // with this method.
-  void InitializeRenderer(const RigidTransformd& X_WR, bool add_terrain,
-                          RenderEngineVtk* engine) {
-    engine->UpdateViewpoint(X_WR);
+    renderer_->UpdateViewpoint(X_WR);
 
     if (add_terrain) {
       PerceptionProperties material;
@@ -416,9 +403,9 @@ class RenderEngineVtkTest : public ::testing::Test {
       material.AddProperty(
           "phong", "diffuse",
           Vector4d{kTerrainColorD.r, kTerrainColorD.g, kTerrainColorD.b, 1.0});
-      engine->RegisterVisual(GeometryId::get_new_id(), HalfSpace(), material,
-                             RigidTransformd::Identity(),
-                             false /* needs update */);
+      renderer_->RegisterVisual(GeometryId::get_new_id(), HalfSpace(), material,
+                                RigidTransformd::Identity(),
+                                false /* needs update */);
     }
   }
 
@@ -440,12 +427,7 @@ class RenderEngineVtkTest : public ::testing::Test {
     return material;
   }
 
-  RgbaColor expected_color_{kDefaultVisualColor, 255};
-  RgbaColor expected_outlier_color_{kDefaultVisualColor, 255};
-  float expected_outlier_depth_{3.f};
-  float expected_object_depth_{2.f};
   RenderLabel expected_label_;
-  RenderLabel expected_outlier_label_{RenderLabel::kDontCare};
   RgbaColor default_color_{kDefaultVisualColor, 255};
 
   const DepthCameraProperties camera_ = {kWidth, kHeight, kFovY, "unused",
@@ -484,12 +466,12 @@ TEST_F(RenderEngineVtkTest, TextureMeshTest) {
       {id, RigidTransformd::Identity()}});
 
   ImageRgba8U color(camera_.width, camera_.height);
-  Render(renderer_.get(), &camera_, &color);
+  Render(renderer_.get(), &color);
 
-  // const std::string file_path = "/tmp/camera_distortion/color_image.png";
-  // SaveToFileHelper(color, file_path);
+  const std::string file_path = "/tmp/color_image.png";
+  SaveToFileHelper(color, file_path);
 
-  std::promise<void>().get_future().wait_for(std::chrono::seconds(10));
+  // std::promise<void>().get_future().wait_for(std::chrono::seconds(100));
 }
 
 TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
@@ -540,7 +522,7 @@ TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
     }
   }
   const std::string file_path =
-      "/tmp/camera_distortion/color_image_distortion_calc.png";
+      "/tmp/color_image_distortion_calc.png";
   SaveToFileHelper(color_distorted_calc, file_path);
 
   ImageRgba8U color_distorted_diff(camera_.width, camera_.height);
@@ -553,7 +535,7 @@ TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
     }
   }
   const std::string file_path_diff =
-      "/tmp/camera_distortion/color_image_distortion_diff.png";
+      "/tmp/color_image_distortion_diff.png";
   SaveToFileHelper(color_distorted_diff, file_path_diff);
 
   // Convert the rendered distorted image to non-distorted image using camera
@@ -573,7 +555,7 @@ TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
   }
 
   const std::string file_path2 =
-      "/tmp/camera_distortion/color_image_nodistortion_calc.png";
+      "/tmp/color_image_nodistortion_calc.png";
   SaveToFileHelper(color_nodistortion_calc, file_path2);
 }
 
