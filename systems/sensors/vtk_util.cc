@@ -1,5 +1,6 @@
 #include "drake/systems/sensors/vtk_util.h"
 
+#include <cmath>
 #include <Eigen/Dense>
 #include <vtkNew.h>
 #include <vtkPlaneSource.h>
@@ -20,6 +21,10 @@ vtkSmartPointer<vtkPlaneSource> CreateSquarePlane(double size) {
   plane->SetOrigin(-half_size, -half_size, 0.);
   plane->SetPoint1(-half_size, half_size, 0.);
   plane->SetPoint2(half_size, -half_size, 0.);
+  double resolution = 0.1;
+  int resolution_int = std::floor(size/resolution);
+  plane->SetXResolution(resolution_int);
+  plane->SetYResolution(resolution_int);
   plane->SetNormal(0., 0., 1.);
   plane->Update();
 

@@ -120,7 +120,7 @@ constexpr char kRgbaDistortionFuncReplacement[] = R"__(
     // "xi" : -0.0715060319640005,
     // "alpha" : 0.702225667086413
     const float alpha = 0.702225667086413;
-    const float xi = -0.0715060319640005;
+    const float xi = 0;
     float x1 = view_pos[0];
     float y1 = view_pos[1];
     float z1 = view_pos[2];
@@ -129,7 +129,7 @@ constexpr char kRgbaDistortionFuncReplacement[] = R"__(
     float y1_2 = y1*y1;
     float z1_2 = z1*z1;
     float dist1 = sqrt(x1_2 + y1_2 + z1_2);
-    float z1_distort = xi*dist1 + z1;
+    float z1_distort = xi*dist1 - z1;
     float z1_distrot_2 = z1_distort * z1_distort;
     float dist2 = sqrt(x1_2 + y1_2 + z1_distrot_2);
     // rational distortion factor
@@ -140,21 +140,11 @@ constexpr char kRgbaDistortionFuncReplacement[] = R"__(
   }
 
   vec4 DoubleSphereDistort2(vec4 view_pos) {
-    // FL double sphere camera model:
-    // "cols" : 2560,
-    // "rows" : 2048,
-    // "fx" : 1346.53239902215,
-    // "fy" : 1346.19704988697,
-    // "cx" : 1307.88289503998,
-    // "cy" : 1033.7367002217,
-    // "double_sphere" : {
-    // "xi" : -0.0715060319640005,
-    // "alpha" : 0.702225667086413
     const float alpha = 0.702225667086413;
     const float xi = -0.0715060319640005;
 
     float z = view_pos[2];
-    float z_inv = 1 / z;
+    float z_inv = 1.0 / z;
     float x1 = view_pos[0] * z_inv;
     float y1 = view_pos[1] * z_inv;
 
@@ -235,7 +225,7 @@ constexpr char kRgbaDistortionFuncReplacement[] = R"__(
 constexpr char kRgbaDistortionVertexShaderReplacement[] = R"__(
   vertexVCVSOutput = MCVCMatrix * vertexMC;
 
-  vec4 vertexVC_distort = DoubleSphereDistort2(vertexVCVSOutput);
+  vec4 vertexVC_distort = DoubleSphereDistort(vertexVCVSOutput);
 
   gl_Position = MCDCMatrix * inverse(MCVCMatrix) * vertexVC_distort;
 )__";
@@ -867,8 +857,14 @@ void RenderEngineVtk::UpdateWindow(const RenderCameraCore& camera,
    The symbols in the matrix are predominantly aliases for the input parameter
    values (see below for details).
   */
-  const double fx = intrinsics.focal_x();
-  const double fy = intrinsics.focal_y();
+  const double fx = intrinsics.focal_x() * 1.0;
+  const double fy = intrinsics.focal_y() * 1.0;
+  std::cout << "linear fx: " << intrinsics.focal_x()
+            << ", double sphere fx:" << 312.975 << std::endl;
+  std::cout << "linear fy: " << intrinsics.focal_y()
+            << ", double sphere fy:" << 312.975 << std::endl;
+  // const double fx = 312.975;
+  // const double fy = 312.975;
   const double n = camera.clipping().near();
   const double f = camera.clipping().far();
   const int w = intrinsics.width();

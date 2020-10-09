@@ -182,10 +182,13 @@ filegroup(
     name = "test_models",
     testonly = 1,
     srcs = [
+        "test/color_checkerboard.png",
         "test/diag_gradient.png",
         "test/distortion_test_checkerboard.obj",
         "test/distortion_test_checkerboard.png",
         "test/distortion_test_checkerboard.mtl",
+        "test/gradient_texture_circle.png",
+        "test/gradient_texture_strip.png",
     ],
 )
 

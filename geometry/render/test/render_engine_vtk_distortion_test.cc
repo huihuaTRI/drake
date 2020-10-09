@@ -67,7 +67,7 @@ using systems::sensors::PixelType;
 const int kWidth = 2560;
 const int kHeight = 2048;
 const double kZNear = 0.5;
-const double kZFar = 10.;
+const double kZFar = 5.;
 const double kFovY = 1.62144727;
 const bool kShowWindow = false;
 
@@ -75,7 +75,7 @@ const bool kShowWindow = false;
 const ColorI kBgColor = {254u, 127u, 0u};
 const ColorD kTerrainColorD{0., 0., 0.};
 const ColorI kDefaultVisualColor = {229u, 229u, 229u};
-const float kDefaultDistance{5.f};
+const float kDefaultDistance{2.f};
 
 template <PixelType kPixelType>
 void SaveToFileHelper(const Image<kPixelType>& image,
@@ -401,8 +401,8 @@ class RenderEngineVtkTest : public ::testing::Test {
       PerceptionProperties material;
       material.AddProperty("label", "id", RenderLabel::kDontCare);
       material.AddProperty(
-          "phong", "diffuse",
-          Vector4d{kTerrainColorD.r, kTerrainColorD.g, kTerrainColorD.b, 1.0});
+          "phong", "diffuse_map",
+          FindResourceOrThrow("drake/geometry/render/test/gradient_texture_circle.png"));
       renderer_->RegisterVisual(GeometryId::get_new_id(), HalfSpace(), material,
                                 RigidTransformd::Identity(),
                                 false /* needs update */);
@@ -493,6 +493,22 @@ TEST_F(RenderEngineVtkTest, ImageDistortionTest) {
 
   LinearCameraModel linear_camera_model(1216.75498071, 1216.75498071, 1280,
                                         1024);
+
+
+  Eigen::Vector2d bottom_left_pixel{0, 0};
+  Eigen::Vector3d bottom_left_ray;
+  dd_camera_model.PixelToRay3d(bottom_left_pixel, &bottom_left_ray);
+  const double fov_x_half =
+      std::atan2(std::abs(bottom_left_ray[0]), std::abs(bottom_left_ray[2]));
+  const double fov_y_half =
+      std::atan2(std::abs(bottom_left_ray[1]), std::abs(bottom_left_ray[2]));
+  double fx = (kWidth / 2.0) * bottom_left_ray[2] / bottom_left_ray[0];
+  double fy = (kHeight / 2.0) * bottom_left_ray[2] / bottom_left_ray[1];
+  std::cout << "Bottom left ray: " << bottom_left_ray << std::endl;
+  std::cout << "Focal length x: " << fx << std::endl;
+  std::cout << "Focal length y: " << fy << std::endl;
+  std::cout << "Field of view x: " << fov_x_half * 2 << std::endl;
+  std::cout << "Field of view y: " << fov_y_half * 2 << std::endl;
 
   // Convert the non-distorted image to distorted image using camera models.
   Eigen::Vector2d p_nodist;
